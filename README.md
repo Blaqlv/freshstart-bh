@@ -27,7 +27,7 @@ npm run build    # production build
 | 0 — Discovery & brand audit | ✅ `BRAND.md`, `CONTENT-AUDIT.md`, `REDIRECTS.md` |
 | 1 — Scaffold, tokens, layout, crisis banner | ✅ |
 | Showcase — Home, Mental Health service, Locations | ✅ |
-| 2 — CMS data model + admin editor | ✅ code complete — needs a DB to migrate+seed (see below) |
+| 2 — CMS data model + admin editor | ✅ built + verified end-to-end (migrated & seeded) |
 | 3 — Remaining public pages | ⬜ (showcase pages done) |
 | 4 — Forms | ⬜ |
 | 5 — Admin Portal (RBAC) | ⬜ |
@@ -39,17 +39,23 @@ npm run build    # production build
 
 ## Database setup (Phase 2)
 
-The schema lives in `prisma/schema.prisma` (Prisma 6 + Postgres). To bring a database online:
+The schema lives in `prisma/schema.prisma` (Prisma 6 + Postgres). The initial
+migration is committed under `prisma/migrations/`. To bring a database online:
 
 ```bash
-# 1. Point DATABASE_URL at Postgres (local Docker on :5433, or a Neon pooled URL)
-# 2. Create + apply the initial migration
-npm run db:migrate -- --name init
-# 3. Seed users, locations, services, providers, testimonials, a Home CMS page, forms
-npm run db:seed
-# 4. (optional) browse data
-npm run db:studio
+# Local Postgres via Docker (host port 5434; matches .env.example):
+docker run -d --name fs-pg -e POSTGRES_PASSWORD=devpass -e POSTGRES_USER=fsdev \
+  -e POSTGRES_DB=freshstart -p 5434:5432 postgres:16-alpine
+
+# Set DATABASE_URL in .env to the local Docker URL or a Neon pooled URL, then:
+npm run db:migrate     # apply migrations
+npm run db:seed        # users, locations, services, providers, testimonials, Home page, forms
+npm run db:studio      # (optional) browse data
 ```
+
+> Verified locally end-to-end: login → block editor → publish → draft preview,
+> with audit logging. (Local dev uses host port **5434** to avoid a conflicting
+> listener that was occupying 5433 on this machine.)
 
 Seeded admin login: `admin@freshstartbh.test` / `ChangeMe123!` (one user per role is seeded; all share that dev password — rotate before any real use).
 

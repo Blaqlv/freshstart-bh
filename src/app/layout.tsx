@@ -2,9 +2,6 @@ import type { Metadata } from "next";
 import { Rubik } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
-import { CrisisBanner } from "@/components/layout/CrisisBanner";
 import { site } from "@/lib/site";
 
 const rubik = Rubik({
@@ -22,11 +19,7 @@ export const metadata: Metadata = {
   },
   description:
     "Fresh Start Behavioral Health provides personalized mental health, substance use, and psychiatric treatment across Dayton, Cincinnati, and Milford, OH.",
-  openGraph: {
-    type: "website",
-    siteName: site.name,
-    locale: "en_US",
-  },
+  openGraph: { type: "website", siteName: site.name, locale: "en_US" },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -46,16 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             title="gtm"
           />
         </noscript>
-
-        <a href="#main" className="skip-link">
-          Skip to main content
-        </a>
-        <CrisisBanner />
-        <Header />
-        <main id="main" className="flex-1">
-          {children}
-        </main>
-        <Footer />
+        {children}
       </body>
     </html>
   );
