@@ -439,3 +439,36 @@ model BillingStatement {
 
   @@index([patientId, status])
 }
+
+// ---------------------------------------------------------------------------
+// Intake Portal (Phase 7)
+//
+// The front door for NEW patients before they have portal credentials. A
+// separate, pre-credential session (own cookie) supports save-and-resume. The
+// entire multi-step payload (demographics, medical/mental-health history,
+// insurance, emergency contacts) is AES-256 encrypted as a single JSON blob;
+// only the contact email + status are clear so staff can triage. Resume is via
+// email + a hashed resume code. Same BAA gate as the Patient Portal applies.
+// ---------------------------------------------------------------------------
+
+enum IntakeStatus {
+  IN_PROGRESS
+  SUBMITTED
+}
+
+model IntakeSubmission {
+  id              String       @id @default(cuid())
+  email           String // contact email — used for resume + staff triage
+  status          IntakeStatus @default(IN_PROGRESS)
+  currentStep     Int          @default(0)
+  dataEncrypted   String // AES-256-GCM JSON of all step answers (PHI)
+  resumeTokenHash String // sha256(resume code) for save-and-resume
+  signedName      String? // typed electronic signature
+  signedAt        DateTime?
+  submittedAt     DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([email])
+  @@index([status])
+}

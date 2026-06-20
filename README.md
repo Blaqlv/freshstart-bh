@@ -32,7 +32,7 @@ npm run build    # production build
 | 4 — Forms (Appointment + Insurance) | ✅ encrypted submissions + RBAC admin queue + audited decryption |
 | 5 — Admin Portal (RBAC) | ✅ user mgmt, immutable audit log, incident reporting, form management, TOTP MFA enrollment + at-login second factor |
 | 6 — Patient Portal (MFA) | ✅ separate auth + TOTP MFA, 15-min sliding idle timeout, secure messaging, appointments, refills, documents, billing — PHI fields AES-256 encrypted + audited |
-| 7 — Intake Portal | ⬜ |
+| 7 — Intake Portal | ✅ multi-step new-patient flow (own pre-credential session), save-and-resume via email + hashed resume code, e-signature, encrypted+audited payload, admin review queue |
 | 8 — Analytics dashboard | ⬜ |
 | 9 — Accessibility audit | ⬜ |
 | 10 — SEO/redirects/sitemap, GTM, deploy | ⬜ (redirects scaffolded in `next.config.ts`) |
