@@ -27,7 +27,7 @@ npm run build    # production build
 | 0 — Discovery & brand audit | ✅ `BRAND.md`, `CONTENT-AUDIT.md`, `REDIRECTS.md` |
 | 1 — Scaffold, tokens, layout, crisis banner | ✅ |
 | Showcase — Home, Mental Health service, Locations | ✅ |
-| 2 — CMS data model + admin editor | ⬜ |
+| 2 — CMS data model + admin editor | ✅ code complete — needs a DB to migrate+seed (see below) |
 | 3 — Remaining public pages | ⬜ (showcase pages done) |
 | 4 — Forms | ⬜ |
 | 5 — Admin Portal (RBAC) | ⬜ |
@@ -36,6 +36,22 @@ npm run build    # production build
 | 8 — Analytics dashboard | ⬜ |
 | 9 — Accessibility audit | ⬜ |
 | 10 — SEO/redirects/sitemap, GTM, deploy | ⬜ (redirects scaffolded in `next.config.ts`) |
+
+## Database setup (Phase 2)
+
+The schema lives in `prisma/schema.prisma` (Prisma 6 + Postgres). To bring a database online:
+
+```bash
+# 1. Point DATABASE_URL at Postgres (local Docker on :5433, or a Neon pooled URL)
+# 2. Create + apply the initial migration
+npm run db:migrate -- --name init
+# 3. Seed users, locations, services, providers, testimonials, a Home CMS page, forms
+npm run db:seed
+# 4. (optional) browse data
+npm run db:studio
+```
+
+Seeded admin login: `admin@freshstartbh.test` / `ChangeMe123!` (one user per role is seeded; all share that dev password — rotate before any real use).
 
 ## Brand tokens
 

@@ -1,0 +1,226 @@
+// Fresh Start Behavioral Health — data model.
+// CMS (block-based pages + structured content types) + RBAC users + immutable
+// audit log. Portal/PHI models (intake, messaging, documents) are added in their
+// own phases; PHI fields will be AES-256 encrypted at the application layer.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Access control
+// ---------------------------------------------------------------------------
+
+enum Role {
+  ADMINISTRATOR
+  CLINICAL_DIRECTOR
+  COMPLIANCE_OFFICER
+  RECEPTIONIST
+  PROVIDER
+  BILLING_STAFF
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         Role      @default(RECEPTIONIST)
+  active       Boolean   @default(true)
+  mfaSecret    String? // populated in the MFA phase
+  mfaEnabled   Boolean   @default(false)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  pageVersions PageVersion[]
+  blogPosts    BlogPost[]
+  uploads      Media[]
+  // Optional link to a public-facing provider profile (for PROVIDER role)
+  provider     Provider?     @relation(fields: [providerId], references: [id])
+  providerId   String?
+}
+
+// ---------------------------------------------------------------------------
+// CMS — block-based pages with draft/publish + versioning
+// ---------------------------------------------------------------------------
+
+model Page {
+  id               String        @id @default(cuid())
+  slug             String        @unique
+  title            String
+  status           ContentStatus @default(DRAFT)
+  // SEO fields
+  seoTitle         String?
+  seoDescription   String?
+  canonicalUrl     String?
+  ogImageUrl       String?
+  // Pointer to the version currently shown to the public
+  publishedVersion Int?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  versions PageVersion[]
+
+  @@index([status])
+}
+
+// Each save creates/updates a version. `blocks` is an ordered array of content
+// blocks (hero, richText, faqAccordion, serviceGrid, testimonialCarousel,
+// locationCard, teamGrid, ctaBanner) — see src/lib/cms/blocks.ts.
+model PageVersion {
+  id        String        @id @default(cuid())
+  page      Page          @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  pageId    String
+  version   Int
+  status    ContentStatus @default(DRAFT)
+  blocks    Json          @default("[]")
+  note      String?
+  author    User?         @relation(fields: [authorId], references: [id])
+  authorId  String?
+  createdAt DateTime      @default(now())
+
+  @@unique([pageId, version])
+  @@index([pageId])
+}
+
+model Media {
+  id           String   @id @default(cuid())
+  url          String
+  alt          String // required for accessibility
+  mimeType     String
+  width        Int?
+  height       Int?
+  sizeBytes    Int?
+  uploadedBy   User?    @relation(fields: [uploadedById], references: [id])
+  uploadedById String?
+  createdAt    DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Structured content types
+// ---------------------------------------------------------------------------
+
+model Provider {
+  id              String        @id @default(cuid())
+  slug            String        @unique
+  name            String
+  credentials     String? // e.g. "MD", "PhD, PA-C"
+  title           String? // e.g. "Medical Director"
+  bio             String?
+  specializations String[]
+  languages       String[]
+  telehealth      Boolean       @default(false)
+  availability    String?
+  headshotUrl     String?
+  status          ContentStatus @default(DRAFT)
+  order           Int           @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  users User[]
+}
+
+model Testimonial {
+  id        String        @id @default(cuid())
+  quote     String
+  author    String
+  source    String        @default("Google")
+  rating    Int           @default(5)
+  status    ContentStatus @default(PUBLISHED)
+  order     Int           @default(0)
+  createdAt DateTime      @default(now())
+}
+
+model Service {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  title       String
+  summary     String?
+  description String?
+  eligibility String[]
+  faqs        Json          @default("[]") // [{q,a}]
+  status      ContentStatus @default(DRAFT)
+  order       Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Location {
+  id        String        @id @default(cuid())
+  slug      String        @unique
+  name      String
+  street    String
+  city      String
+  state     String
+  zip       String
+  phone     String?
+  blurb     String?
+  lat       Float?
+  lng       Float?
+  status    ContentStatus @default(PUBLISHED)
+  order     Int           @default(0)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model BlogPost {
+  id            String        @id @default(cuid())
+  slug          String        @unique
+  title         String
+  excerpt       String?
+  body          String?
+  coverImageUrl String?
+  status        ContentStatus @default(DRAFT)
+  publishedAt   DateTime?
+  author        User?         @relation(fields: [authorId], references: [id])
+  authorId      String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Forms (builder/manager) — submissions land here; PHI encrypted in its phase
+// ---------------------------------------------------------------------------
+
+model FormDefinition {
+  id        String   @id @default(cuid())
+  key       String   @unique // appointment-request | insurance-verification | intake | document-upload
+  name      String
+  schema    Json     @default("[]") // editable field definitions
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Immutable audit log (append-only; never updated/deleted from the app)
+// ---------------------------------------------------------------------------
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actorEmail String?
+  action     String // e.g. "page.publish", "user.create"
+  entity     String // e.g. "Page", "User"
+  entityId   String?
+  metadata   Json?
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+}
