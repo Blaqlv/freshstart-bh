@@ -35,7 +35,11 @@ npm run build    # production build
 | 7 — Intake Portal | ✅ multi-step new-patient flow (own pre-credential session), save-and-resume via email + hashed resume code, e-signature, encrypted+audited payload, admin review queue |
 | 8 — Analytics dashboard | ✅ `/dashboard` (role-gated by `dashboard:read`): appointment/conversion KPIs, Medicaid + satisfaction, 6-mo trends, provider/incident/compliance panels, intake funnel, CARF indicators — non-PHI aggregates only |
 | 9 — Accessibility audit | ✅ automated axe-core WCAG 2.2 AA scan across 38 routes → 0 violations; contrast pairings fixed, form controls labelled, skip-link + visible focus verified |
-| 10 — SEO/redirects/sitemap, GTM, deploy | ⬜ (redirects scaffolded in `next.config.ts`) |
+| 10 — SEO/redirects/sitemap, GTM, deploy | ✅ `sitemap.xml` (51 URLs) + `robots.txt`, legacy 301/308 redirects verified, GTM wired, nightly backup cron + `vercel.json`, deploy runbook in `DEPLOY.md` |
+
+All 10 build phases are implemented and verified. Production deploy is the only
+remaining step and requires your accounts/secrets — see **[`DEPLOY.md`](./DEPLOY.md)**
+(Vercel + Neon + Cloudflare, env vars, backup cron, BAA gate).
 
 ## Database setup (Phase 2)
 

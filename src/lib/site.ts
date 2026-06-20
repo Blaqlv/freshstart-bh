@@ -10,6 +10,8 @@
 export const site = {
   name: "Fresh Start Behavioral Health, Inc.",
   shortName: "Fresh Start Behavioral Health",
+  // Canonical production origin (override per-env with NEXT_PUBLIC_SITE_URL).
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://freshstartbhinc.com",
   tagline: "Everyone Deserves a Fresh Start",
   phone: "937-579-0073",
   phoneHref: "tel:+19375790073",
