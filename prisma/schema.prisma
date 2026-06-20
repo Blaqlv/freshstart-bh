@@ -282,3 +282,160 @@ model AuditLog {
   @@index([entity, entityId])
   @@index([createdAt])
 }
+
+// ---------------------------------------------------------------------------
+// Patient Portal (Phase 6)
+//
+// Patients authenticate in a SEPARATE context from staff `User` (own cookie,
+// MFA, 15-min idle timeout). Clinical/PHI text fields are AES-256 encrypted at
+// the app layer (see src/lib/crypto.ts) — only non-PHI metadata is stored in
+// the clear so the portal is usable without decrypting. Do not collect REAL
+// patient data in production until the BAA gate (README §Compliance) is met.
+// ---------------------------------------------------------------------------
+
+model Patient {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  mfaSecret    String?
+  mfaEnabled   Boolean   @default(false)
+  active       Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  appointments Appointment[]
+  threads      MessageThread[]
+  refills      RefillRequest[]
+  documents    PatientDocument[]
+  statements   BillingStatement[]
+}
+
+enum AppointmentStatus {
+  REQUESTED
+  CONFIRMED
+  RESCHEDULE_REQUESTED
+  CANCELLED
+  COMPLETED
+}
+
+model Appointment {
+  id              String            @id @default(cuid())
+  patientId       String
+  patient         Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  // Denormalized labels (no hard FK to Provider/Location) keep the portal
+  // self-contained; ids are kept for later joins if needed.
+  locationId      String?
+  locationName    String?
+  serviceSlug     String?
+  serviceName     String?
+  providerName    String?
+  scheduledAt     DateTime
+  status          AppointmentStatus @default(REQUESTED)
+  reasonEncrypted String? // PHI: reason for visit
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([patientId, status])
+  @@index([scheduledAt])
+}
+
+enum ThreadStatus {
+  OPEN
+  CLOSED
+}
+
+model MessageThread {
+  id        String          @id @default(cuid())
+  patientId String
+  patient   Patient         @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  subject   String
+  status    ThreadStatus    @default(OPEN)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  messages  PortalMessage[]
+
+  @@index([patientId])
+}
+
+enum MessageSender {
+  PATIENT
+  STAFF
+}
+
+model PortalMessage {
+  id            String        @id @default(cuid())
+  threadId      String
+  thread        MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  sender        MessageSender
+  senderName    String
+  bodyEncrypted String // PHI: message body
+  createdAt     DateTime      @default(now())
+  readAt        DateTime?
+
+  @@index([threadId])
+}
+
+enum RefillStatus {
+  REQUESTED
+  IN_REVIEW
+  APPROVED
+  DENIED
+}
+
+model RefillRequest {
+  id                  String       @id @default(cuid())
+  patientId           String
+  patient             Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  medicationEncrypted String // PHI
+  pharmacyEncrypted   String? // PHI
+  notesEncrypted      String? // PHI
+  status              RefillStatus @default(REQUESTED)
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  @@index([patientId, status])
+}
+
+enum ScanStatus {
+  PENDING
+  CLEAN
+  INFECTED
+}
+
+model PatientDocument {
+  id         String     @id @default(cuid())
+  patientId  String
+  patient    Patient    @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  fileName   String
+  mimeType   String
+  sizeBytes  Int
+  // Object-storage key (Cloudflare R2). Null until the upload + virus-scan
+  // pipeline is wired (Phase 8 / Forms §4); metadata + audit trail exist now.
+  storageKey String?
+  scanStatus ScanStatus @default(PENDING)
+  uploadedAt DateTime   @default(now())
+  deletedAt  DateTime? // retention / soft-delete
+
+  @@index([patientId])
+}
+
+enum StatementStatus {
+  DUE
+  PAID
+}
+
+model BillingStatement {
+  id              String          @id @default(cuid())
+  patientId       String
+  patient         Patient         @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  periodLabel     String
+  amountCents     Int
+  status          StatementStatus @default(DUE)
+  issuedAt        DateTime        @default(now())
+  dueAt           DateTime?
+  detailEncrypted String? // PHI-adjacent billing line items
+
+  @@index([patientId, status])
+}

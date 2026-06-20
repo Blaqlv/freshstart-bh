@@ -31,7 +31,7 @@ npm run build    # production build
 | 3 — Public marketing pages (DB-driven) | ✅ services, providers, locations, home, CMS narrative/legal pages, insurance, reviews, blog, contact |
 | 4 — Forms (Appointment + Insurance) | ✅ encrypted submissions + RBAC admin queue + audited decryption |
 | 5 — Admin Portal (RBAC) | ✅ user mgmt, immutable audit log, incident reporting, form management, TOTP MFA enrollment + at-login second factor |
-| 6 — Patient Portal (MFA) | ⬜ |
+| 6 — Patient Portal (MFA) | ✅ separate auth + TOTP MFA, 15-min sliding idle timeout, secure messaging, appointments, refills, documents, billing — PHI fields AES-256 encrypted + audited |
 | 7 — Intake Portal | ⬜ |
 | 8 — Analytics dashboard | ⬜ |
 | 9 — Accessibility audit | ⬜ |
@@ -58,6 +58,7 @@ npm run db:studio      # (optional) browse data
 > listener that was occupying 5433 on this machine.)
 
 Seeded admin login: `admin@freshstartbh.test` / `ChangeMe123!` (one user per role is seeded; all share that dev password — rotate before any real use).
+Seeded patient login (Patient Portal): `patient@freshstartbh.test` / `ChangeMe123!` (demo appointment, message thread, refill, and statement included).
 
 ## Brand tokens
 

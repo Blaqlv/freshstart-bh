@@ -1,5 +1,6 @@
 import { PrismaClient, type Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import crypto from "node:crypto";
 import {
   locations as seedLocations,
   testimonials as seedTestimonials,
@@ -8,6 +9,19 @@ import {
 import { seedPages } from "./seed-pages";
 
 const db = new PrismaClient();
+
+// AES-256-GCM matching src/lib/crypto.ts ("v1:iv:tag:ct"). Inlined because
+// crypto.ts is "server-only" and can't be imported into the seed script.
+function encField(plaintext: string): string {
+  const raw = process.env.APP_ENCRYPTION_KEY;
+  if (!raw) throw new Error("APP_ENCRYPTION_KEY is not set (needed to seed encrypted demo data)");
+  const key = raw.length === 64 ? Buffer.from(raw, "hex") : Buffer.from(raw, "base64");
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
+  const ct = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return `v1:${iv.toString("base64")}:${tag.toString("base64")}:${ct.toString("base64")}`;
+}
 
 // Per-service detail copy (description + FAQs) for the /services/[slug] pages.
 const SERVICE_DETAILS: Record<string, { description: string; faqs: { q: string; a: string }[] }> = {
@@ -212,6 +226,69 @@ async function main() {
     await db.formDefinition.upsert({ where: { key: f.key }, update: { name: f.name }, create: { ...f, schema: [] } });
   }
 
+  // --- Patient Portal demo data -------------------------------------------
+  // crypto.ts can't be imported here (it's "server-only"); inline the same
+  // AES-256-GCM "v1:iv:tag:ct" format so values are decryptable by the app.
+  const demoEmail = "patient@freshstartbh.test";
+  const demoPatient = await db.patient.upsert({
+    where: { email: demoEmail },
+    update: {},
+    create: { email: demoEmail, name: "Jordan Rivers", passwordHash },
+  });
+  // Reset demo records so re-seeding is idempotent.
+  await db.appointment.deleteMany({ where: { patientId: demoPatient.id } });
+  await db.messageThread.deleteMany({ where: { patientId: demoPatient.id } });
+  await db.refillRequest.deleteMany({ where: { patientId: demoPatient.id } });
+  await db.billingStatement.deleteMany({ where: { patientId: demoPatient.id } });
+
+  const day = (n: number) => new Date(Date.now() + n * 86400000);
+  const daytonMain = await db.location.findFirst({ where: { city: "Dayton" } });
+  await db.appointment.create({
+    data: {
+      patientId: demoPatient.id,
+      locationId: daytonMain?.id ?? null,
+      locationName: daytonMain?.name ?? null,
+      serviceSlug: "psychiatry",
+      serviceName: "Psychiatry",
+      scheduledAt: day(5),
+      status: "CONFIRMED",
+      reasonEncrypted: encField("Medication check-in"),
+    },
+  });
+  await db.messageThread.create({
+    data: {
+      patientId: demoPatient.id,
+      subject: "Welcome to your portal",
+      messages: {
+        create: {
+          sender: "STAFF",
+          senderName: "Care Team",
+          bodyEncrypted: encField(
+            "Welcome to the Fresh Start patient portal! You can message us here anytime. For emergencies, call 911 or 988.",
+          ),
+        },
+      },
+    },
+  });
+  await db.refillRequest.create({
+    data: {
+      patientId: demoPatient.id,
+      medicationEncrypted: encField("Sertraline 50mg"),
+      pharmacyEncrypted: encField("Main St Pharmacy, Dayton"),
+      status: "IN_REVIEW",
+    },
+  });
+  await db.billingStatement.create({
+    data: {
+      patientId: demoPatient.id,
+      periodLabel: "May 2026 visit",
+      amountCents: 4500,
+      status: "DUE",
+      dueAt: day(20),
+      detailEncrypted: encField("Office visit copay — $45.00"),
+    },
+  });
+
   console.log("Seed complete:");
   console.log(`  users:        ${USERS.length} (login: admin@freshstartbh.test / ChangeMe123!)`);
   console.log(`  locations:    ${seedLocations.length}`);
@@ -221,6 +298,7 @@ async function main() {
   console.log(`  pages:        ${seedPages.length + 1} (home + narrative/legal, published)`);
   console.log(`  blog posts:   ${posts.length}`);
   console.log(`  forms:        ${forms.length}`);
+  console.log(`  patient:      1 (login: ${demoEmail} / ChangeMe123!)`);
 }
 
 main()
