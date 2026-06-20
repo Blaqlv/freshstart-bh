@@ -105,3 +105,21 @@ This platform is being built **HIPAA-conscious**, which is **not** the same as
 top of Postgres at-rest encryption), immutable audit logging of all PHI access, MFA on
 portal logins, 15-minute idle session timeout, virus-scan-before-store on uploads, and
 a no-PHI notice on the public Contact form.
+
+### Secure document upload pipeline (wired)
+
+`src/lib/documents.ts` implements the shared Secure Document Upload flow:
+**validate → virus scan (before storage) → AES-256 encrypt → store → audit**, with
+audited decrypt-on-download and delete.
+
+- **Storage** (`src/lib/storage.ts`): Cloudflare R2 (S3-compatible) when `R2_*` is
+  set; otherwise an encrypted on-disk `.uploads/` fallback for local dev. Files are
+  app-layer encrypted *before* leaving the app, so even the fallback stores ciphertext.
+- **Scanning** (`src/lib/scan.ts`): streams to **clamd** (`CLAMAV_HOST`) when
+  configured and fails closed on scanner errors; without clamd it still rejects the
+  EICAR signature so the reject path is real. **Wire clamd before accepting real PHI.**
+- **Retention**: soft-deleted documents are purged by `/api/cron/retention`
+  (`DOC_RETENTION_GRACE_DAYS`, default 30) after removing the stored object.
+
+Used by the Patient Portal today; the same primitives are reusable for Intake and
+insurance-card uploads.

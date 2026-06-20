@@ -38,6 +38,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# local dev document store (R2 fallback; encrypted blobs, but never commit)
+.uploads
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

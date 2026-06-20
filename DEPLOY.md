@@ -34,11 +34,19 @@ No AWS anywhere in the stack.
 2. Confirm `NEXT_PUBLIC_SITE_URL` matches the production origin so
    `sitemap.xml` / `robots.txt` emit canonical URLs.
 
-## 4. Backups (R2) — before any real PHI
-`/api/cron/backup` is the secured seam. Wire R2 credentials (`R2_*`) and the
-dump→encrypt→upload step; until configured it authenticates, logs
-`backup.skipped` to the audit log, and returns `not_configured` so a monitor can
-alert. This is an *extra* layer beyond Neon's point-in-time restore.
+## 4. Documents, scanning & backups (R2 + clamd) — before any real PHI
+- **Document storage**: set `R2_*` (account id, key, secret, `R2_BUCKET`). Until
+  set, uploads use an encrypted local `.uploads/` fallback (dev only). Bytes are
+  AES-256 encrypted by the app before storage either way.
+- **Virus scanning**: stand up a **clamd** instance and set `CLAMAV_HOST` /
+  `CLAMAV_PORT`. The pipeline streams every upload to clamd before storing and
+  **fails closed** if the scanner is unreachable. Without it, only the EICAR test
+  signature is caught — not acceptable for real PHI.
+- **Retention**: `/api/cron/retention` (07:30 UTC) purges documents soft-deleted
+  more than `DOC_RETENTION_GRACE_DAYS` (default 30) ago.
+- **Backups**: `/api/cron/backup` is the secured seam (`R2_BACKUP_BUCKET`). Until
+  the dump→encrypt→upload step is wired it authenticates, logs `backup.skipped`,
+  and returns `not_configured` so a monitor can alert. Extra layer beyond Neon PITR.
 
 ## 5. SEO cutover
 - 301/308 legacy redirects live in `next.config.ts` (verified resolving).

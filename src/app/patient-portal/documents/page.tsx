@@ -57,6 +57,14 @@ export default async function DocumentsPage() {
                 <span className={"rounded-full px-2.5 py-0.5 text-xs font-medium " + (scanStyle[d.scanStatus] ?? "")}>
                   {d.scanStatus === "PENDING" ? "scanning" : d.scanStatus.toLowerCase()}
                 </span>
+                {d.scanStatus === "CLEAN" && (
+                  <a
+                    href={`/patient-portal/documents/${d.id}/download`}
+                    className="text-sm font-medium text-brand-dark hover:underline"
+                  >
+                    Download
+                  </a>
+                )}
                 <form action={deleteDocument}>
                   <input type="hidden" name="id" value={d.id} />
                   <button className="text-sm font-medium text-accent hover:underline">Delete</button>

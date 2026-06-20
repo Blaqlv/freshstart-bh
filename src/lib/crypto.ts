@@ -44,3 +44,26 @@ export function encryptJson(value: unknown): string {
 export function decryptJson<T = unknown>(payload: string): T {
   return JSON.parse(decrypt(payload)) as T;
 }
+
+/**
+ * Binary field encryption for file contents (documents). Layout:
+ * [12-byte IV][16-byte GCM tag][ciphertext]. Applied before objects are written
+ * to storage so PHI documents are encrypted at the app layer in addition to
+ * R2's server-side at-rest encryption.
+ */
+export function encryptBuffer(plain: Buffer): Buffer {
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv("aes-256-gcm", getKey(), iv);
+  const ct = Buffer.concat([cipher.update(plain), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return Buffer.concat([iv, tag, ct]);
+}
+
+export function decryptBuffer(payload: Buffer): Buffer {
+  const iv = payload.subarray(0, 12);
+  const tag = payload.subarray(12, 28);
+  const ct = payload.subarray(28);
+  const decipher = crypto.createDecipheriv("aes-256-gcm", getKey(), iv);
+  decipher.setAuthTag(tag);
+  return Buffer.concat([decipher.update(ct), decipher.final()]);
+}
