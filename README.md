@@ -29,7 +29,7 @@ npm run build    # production build
 | Showcase — Home, Mental Health service, Locations | ✅ |
 | 2 — CMS data model + admin editor | ✅ built + verified end-to-end (migrated & seeded) |
 | 3 — Public marketing pages (DB-driven) | ✅ services, providers, locations, home, CMS narrative/legal pages, insurance, reviews, blog, contact |
-| 4 — Forms | ⬜ |
+| 4 — Forms (Appointment + Insurance) | ✅ encrypted submissions + RBAC admin queue + audited decryption |
 | 5 — Admin Portal (RBAC) | ⬜ |
 | 6 — Patient Portal (MFA) | ⬜ |
 | 7 — Intake Portal | ⬜ |

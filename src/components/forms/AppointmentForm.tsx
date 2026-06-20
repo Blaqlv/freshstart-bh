@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState } from "react";
 import { NO_PHI_NOTICE } from "@/lib/site";
+import { submitAppointment, type FormState } from "@/app/_actions/forms";
 
 type Option = { value: string; label: string };
 
@@ -10,8 +11,8 @@ const labelCls = "block text-sm font-medium text-ink";
 
 /**
  * Appointment Request form (Brief §8.1). No clinical information is collected.
- * Phase 3 renders the UI + required no-PHI notice; Phase 4 wires secure,
- * audited submission to the admin queue.
+ * Submits to a server action that encrypts the payload and queues it for staff;
+ * the required no-PHI notice is shown inline.
  */
 export function AppointmentForm({
   locations,
@@ -20,9 +21,9 @@ export function AppointmentForm({
   locations: Option[];
   services: Option[];
 }) {
-  const [submitted, setSubmitted] = useState(false);
+  const [state, action, pending] = useActionState<FormState, FormData>(submitAppointment, {});
 
-  if (submitted) {
+  if (state.ok) {
     return (
       <div role="status" className="rounded-card border border-brand bg-brand-tint p-6">
         <h3 className="font-semibold text-brand-dark">Thank you — we&rsquo;ll be in touch.</h3>
@@ -35,19 +36,8 @@ export function AppointmentForm({
   }
 
   return (
-    <form
-      id="appointment"
-      onSubmit={(e) => {
-        e.preventDefault();
-        // Phase 4: POST to a secure, audited server action / admin queue.
-        setSubmitted(true);
-      }}
-      className="space-y-4"
-    >
-      <div
-        role="note"
-        className="rounded-lg border-l-4 border-accent bg-accent/5 px-4 py-3 text-sm text-ink"
-      >
+    <form id="appointment" action={action} className="space-y-4">
+      <div role="note" className="rounded-lg border-l-4 border-accent bg-accent/5 px-4 py-3 text-sm text-ink">
         {NO_PHI_NOTICE}
       </div>
 
@@ -74,7 +64,7 @@ export function AppointmentForm({
         </label>
         <label className="block">
           <span className={labelCls}>Preferred location</span>
-          <select name="location" className={field} defaultValue="">
+          <select name="location" required className={field} defaultValue="">
             <option value="" disabled>Select a location</option>
             {locations.map((l) => (
               <option key={l.value} value={l.value}>{l.label}</option>
@@ -83,7 +73,7 @@ export function AppointmentForm({
         </label>
         <label className="block">
           <span className={labelCls}>Preferred service</span>
-          <select name="service" className={field} defaultValue="">
+          <select name="service" required className={field} defaultValue="">
             <option value="" disabled>Select a service</option>
             {services.map((s) => (
               <option key={s.value} value={s.value}>{s.label}</option>
@@ -100,11 +90,14 @@ export function AppointmentForm({
         </span>
       </label>
 
+      {state.error && <p role="alert" className="text-sm text-accent">{state.error}</p>}
+
       <button
         type="submit"
-        className="rounded-full bg-brand-dark px-6 py-3 text-sm font-semibold text-white hover:bg-brand-hover"
+        disabled={pending}
+        className="rounded-full bg-brand-dark px-6 py-3 text-sm font-semibold text-white hover:bg-brand-hover disabled:opacity-60"
       >
-        Request Appointment
+        {pending ? "Submitting…" : "Request Appointment"}
       </button>
     </form>
   );

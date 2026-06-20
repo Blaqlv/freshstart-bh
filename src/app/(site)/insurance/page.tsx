@@ -36,7 +36,7 @@ export default function InsurancePage() {
           Contact us — we may still be able to help.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Button href="/contact#appointment">Verify My Insurance</Button>
+          <Button href="/insurance/verify">Verify My Insurance</Button>
           <Button href="/contact" variant="secondary">Ask a Question</Button>
         </div>
       </Container>

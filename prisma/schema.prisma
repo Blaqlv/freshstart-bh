@@ -206,6 +206,30 @@ model FormDefinition {
   updatedAt DateTime @updatedAt
 }
 
+enum SubmissionStatus {
+  NEW
+  IN_PROGRESS
+  CONTACTED
+  ARCHIVED
+}
+
+// A submitted form. The full payload is AES-256-GCM encrypted at the app layer
+// (`encryptedPayload`); only non-sensitive metadata is stored in the clear so
+// the admin queue is usable without decrypting. Decryption is gated + audited.
+model FormSubmission {
+  id               String           @id @default(cuid())
+  formKey          String // appointment-request | insurance-verification | ...
+  status           SubmissionStatus @default(NEW)
+  label            String // non-sensitive summary for the queue (e.g. service @ location)
+  encryptedPayload String // ciphertext (see src/lib/crypto.ts)
+  handledById      String?
+  handledAt        DateTime?
+  createdAt        DateTime         @default(now())
+
+  @@index([formKey, status])
+  @@index([createdAt])
+}
+
 // ---------------------------------------------------------------------------
 // Immutable audit log (append-only; never updated/deleted from the app)
 // ---------------------------------------------------------------------------

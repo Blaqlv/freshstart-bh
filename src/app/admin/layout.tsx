@@ -24,6 +24,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       { label: "Testimonials", href: "/admin/testimonials" },
     );
   }
+  if (can(session.role, "appointments:read") || can(session.role, "billing:manage")) {
+    nav.push({ label: "Form submissions", href: "/admin/submissions" });
+  }
   if (can(session.role, "audit:read")) nav.push({ label: "Audit log", href: "/admin/audit" });
 
   return (
