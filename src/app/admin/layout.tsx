@@ -31,6 +31,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (can(session.role, "forms:manage")) nav.push({ label: "Form management", href: "/admin/forms" });
   if (can(session.role, "incidents:manage")) nav.push({ label: "Incidents", href: "/admin/incidents" });
   if (can(session.role, "users:manage")) nav.push({ label: "Users", href: "/admin/users" });
+  if (can(session.role, "dashboard:read")) nav.push({ label: "Analytics dashboard", href: "/dashboard" });
   if (can(session.role, "audit:read")) nav.push({ label: "Audit log", href: "/admin/audit" });
   // Security (own MFA enrollment) is available to every signed-in staff member.
   nav.push({ label: "Security", href: "/admin/security" });

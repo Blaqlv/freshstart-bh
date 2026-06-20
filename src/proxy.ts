@@ -23,7 +23,7 @@ export async function proxy(req: NextRequest) {
     return patientGate(req, secret);
   }
 
-  // Admin portal.
+  // Admin portal + analytics dashboard share the staff session.
   if (pathname === "/admin/login") return NextResponse.next();
   const token = req.cookies.get(ADMIN_COOKIE)?.value;
   let valid = false;
@@ -95,5 +95,5 @@ async function patientGate(req: NextRequest, secret: Uint8Array | null) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/patient-portal/:path*"],
+  matcher: ["/admin/:path*", "/dashboard/:path*", "/patient-portal/:path*"],
 };

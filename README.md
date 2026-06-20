@@ -33,7 +33,7 @@ npm run build    # production build
 | 5 — Admin Portal (RBAC) | ✅ user mgmt, immutable audit log, incident reporting, form management, TOTP MFA enrollment + at-login second factor |
 | 6 — Patient Portal (MFA) | ✅ separate auth + TOTP MFA, 15-min sliding idle timeout, secure messaging, appointments, refills, documents, billing — PHI fields AES-256 encrypted + audited |
 | 7 — Intake Portal | ✅ multi-step new-patient flow (own pre-credential session), save-and-resume via email + hashed resume code, e-signature, encrypted+audited payload, admin review queue |
-| 8 — Analytics dashboard | ⬜ |
+| 8 — Analytics dashboard | ✅ `/dashboard` (role-gated by `dashboard:read`): appointment/conversion KPIs, Medicaid + satisfaction, 6-mo trends, provider/incident/compliance panels, intake funnel, CARF indicators — non-PHI aggregates only |
 | 9 — Accessibility audit | ⬜ |
 | 10 — SEO/redirects/sitemap, GTM, deploy | ⬜ (redirects scaffolded in `next.config.ts`) |
 

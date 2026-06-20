@@ -38,5 +38,5 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
     mfa: user.mfaEnabled,
   });
 
-  redirect(next.startsWith("/admin") ? next : "/admin");
+  redirect(next.startsWith("/admin") || next.startsWith("/dashboard") ? next : "/admin");
 }
