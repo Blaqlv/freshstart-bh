@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+/*
+  Fresh Start Behavioral Health — design tokens.
+  Palette + type harvested from the live site (see BRAND.md). Do not introduce
+  a new palette. Brand teal #4ba5aa is decorative/large-display only; use
+  --color-brand-dark (#31585d) for text/links on light backgrounds (WCAG AA).
+*/
+@theme {
+  --color-brand: #4ba5aa;
+  --color-brand-hover: #5497a0;
+  --color-brand-dark: #31585d;
+  --color-brand-tint: #eef6f6;
+  --color-accent: #ed1c24;
+  --color-gold: #ffdd00;
+  --color-ink: #1a2a2c;
+  --color-ink-soft: #475457;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f6f9f9;
+  --color-line: #e2e8e8;
+
+  --font-sans: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 1rem;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Visible focus for keyboard users (WCAG 2.2 AA) */
+:focus-visible {
+  outline: 3px solid var(--color-brand-dark);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Skip-link target */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  padding: 0.75rem 1.25rem;
+  background: var(--color-brand-dark);
+  color: #fff;
+  border-radius: 0 0 0.5rem 0;
+}
+.skip-link:focus {
+  left: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
