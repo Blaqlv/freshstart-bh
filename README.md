@@ -28,7 +28,7 @@ npm run build    # production build
 | 1 — Scaffold, tokens, layout, crisis banner | ✅ |
 | Showcase — Home, Mental Health service, Locations | ✅ |
 | 2 — CMS data model + admin editor | ✅ built + verified end-to-end (migrated & seeded) |
-| 3 — Remaining public pages | ⬜ (showcase pages done) |
+| 3 — Public marketing pages (DB-driven) | ✅ services, providers, locations, home, CMS narrative/legal pages, insurance, reviews, blog, contact |
 | 4 — Forms | ⬜ |
 | 5 — Admin Portal (RBAC) | ⬜ |
 | 6 — Patient Portal (MFA) | ⬜ |

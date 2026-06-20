@@ -5,8 +5,52 @@ import {
   testimonials as seedTestimonials,
   homeServiceTiles,
 } from "../src/lib/site";
+import { seedPages } from "./seed-pages";
 
 const db = new PrismaClient();
+
+// Per-service detail copy (description + FAQs) for the /services/[slug] pages.
+const SERVICE_DETAILS: Record<string, { description: string; faqs: { q: string; a: string }[] }> = {
+  "mental-health": {
+    description:
+      "Mental health care at Fresh Start is never one-size-fits-all. Our psychiatrists, nurse practitioners, physician assistants, and licensed counselors work together to build a plan around your goals — combining psychiatric care, evidence-based therapy, and ongoing support.\n\nWhether you’re facing a new diagnosis or have struggled for years, we meet you with compassion and a clear path forward.",
+    faqs: [
+      { q: "What conditions do you treat?", a: "Depression, anxiety, bipolar disorder, PTSD, ADHD, OCD, psychotic disorders, and co-occurring substance use, among others." },
+      { q: "Do you prescribe medication?", a: "Yes — our psychiatric providers offer medication management alongside therapy when clinically appropriate." },
+    ],
+  },
+  "substance-use-treatment": {
+    description:
+      "We provide compassionate, evidence-based treatment for substance use disorders, including medication-assisted treatment, counseling, and recovery support. Care is confidential and protected under federal law (42 CFR Part 2).\n\nOur whole-person approach addresses both addiction and any co-occurring mental health conditions.",
+    faqs: [
+      { q: "Is treatment confidential?", a: "Yes. Substance use records receive additional federal protection and are not shared without your written consent except as permitted by law." },
+      { q: "Do you offer medication-assisted treatment?", a: "Yes, when clinically appropriate, as part of a comprehensive plan." },
+    ],
+  },
+  "crisis-services": {
+    description:
+      "When you need urgent attention for your mental health, our certified counselors provide crisis care and stabilization. If you are experiencing a life-threatening emergency, call 911 or go to your nearest emergency department.",
+    faqs: [
+      { q: "What should I do in an emergency?", a: "Call 911 or go to your nearest emergency department. You can also call or text 988 for the Suicide & Crisis Lifeline." },
+    ],
+  },
+};
+
+function serviceDetail(slug: string, fallbackDesc: string | null) {
+  const d = SERVICE_DETAILS[slug];
+  return {
+    description: d?.description ?? fallbackDesc,
+    faqs: d?.faqs ?? [
+      { q: "How do I get started?", a: "Call us or request an appointment online to schedule an initial assessment." },
+      { q: "What insurance do you accept?", a: "Most major plans and Ohio Medicaid. See our insurance page for the full list." },
+    ],
+    eligibility: [
+      "Children, adolescents, and adults are welcome.",
+      "Most major insurance and Ohio Medicaid accepted; self-pay available.",
+      "Telehealth available for many appointment types.",
+    ],
+  };
+}
 
 const SERVICE_CATALOG: { slug: string; title: string; summary: string }[] = [
   { slug: "mental-health", title: "Mental Health", summary: "Personalized treatment for a wide range of mental health conditions." },
@@ -63,18 +107,27 @@ async function main() {
   for (let i = 0; i < SERVICE_CATALOG.length; i++) {
     const s = SERVICE_CATALOG[i];
     const tile = homeServiceTiles.find((h) => h.slug === s.slug);
+    const detail = serviceDetail(s.slug, tile?.blurb ?? s.summary);
     await db.service.upsert({
       where: { slug: s.slug },
-      update: { title: s.title, summary: s.summary, order: i, status: "PUBLISHED" },
+      update: {
+        title: s.title,
+        summary: s.summary,
+        description: detail.description,
+        eligibility: detail.eligibility,
+        faqs: detail.faqs,
+        order: i,
+        status: "PUBLISHED",
+      },
       create: {
         slug: s.slug,
         title: s.title,
         summary: s.summary,
-        description: tile?.blurb ?? null,
+        description: detail.description,
         order: i,
         status: "PUBLISHED",
-        eligibility: ["Children, adolescents, and adults welcome.", "Most major insurance and Ohio Medicaid accepted."],
-        faqs: [{ q: "How do I get started?", a: "Call us or request an appointment online to schedule an initial assessment." }],
+        eligibility: detail.eligibility,
+        faqs: detail.faqs,
       },
     });
   }
@@ -111,6 +164,44 @@ async function main() {
     create: { pageId: home.id, version: 1, status: "PUBLISHED", blocks },
   });
 
+  // CMS-managed narrative & legal pages (rendered by the (site)/[...slug] catch-all)
+  for (const p of seedPages) {
+    const page = await db.page.upsert({
+      where: { slug: p.slug },
+      update: { title: p.title, status: "PUBLISHED", publishedVersion: 1, seoDescription: p.seoDescription ?? null },
+      create: { slug: p.slug, title: p.title, status: "PUBLISHED", publishedVersion: 1, seoDescription: p.seoDescription ?? null },
+    });
+    await db.pageVersion.upsert({
+      where: { pageId_version: { pageId: page.id, version: 1 } },
+      update: { blocks: p.blocks as object, status: "PUBLISHED" },
+      create: { pageId: page.id, version: 1, status: "PUBLISHED", blocks: p.blocks as object },
+    });
+  }
+
+  // A couple of blog posts (migrated from /behavioral-health-blog)
+  const posts = [
+    {
+      slug: "understanding-anxiety",
+      title: "Understanding Anxiety: When to Seek Help",
+      excerpt: "Anxiety is common — but it doesn't have to run your life. Here's how to recognize when it's time to reach out.",
+      body: "Anxiety is one of the most common mental health concerns, and it’s very treatable. Many people live with everyday worry, but anxiety becomes a concern when it’s persistent, overwhelming, or interferes with work, relationships, or daily life.\n\nIf you find yourself avoiding situations, struggling to sleep, or feeling on edge most days, it may be time to talk with a professional. Effective treatments — including therapy and, when appropriate, medication — can help you feel like yourself again.\n\nReach out to our team to schedule an assessment. You deserve support.",
+    },
+    {
+      slug: "supporting-a-loved-one-in-recovery",
+      title: "Supporting a Loved One in Recovery",
+      excerpt: "Recovery is a journey, and families play a vital role. Here are practical ways to offer meaningful support.",
+      body: "When someone you love is in recovery from substance use, your support can make a real difference. Start by learning about addiction as a health condition — not a moral failing.\n\nSet healthy boundaries, celebrate small wins, and take care of your own wellbeing too. Family therapy and peer support groups can help everyone heal.\n\nOur case management and family therapy teams are here to help your whole family move forward.",
+    },
+  ];
+  for (let i = 0; i < posts.length; i++) {
+    const p = posts[i];
+    await db.blogPost.upsert({
+      where: { slug: p.slug },
+      update: { title: p.title, excerpt: p.excerpt, body: p.body, status: "PUBLISHED" },
+      create: { ...p, status: "PUBLISHED", publishedAt: new Date(Date.now() - i * 86400000) },
+    });
+  }
+
   const forms = [
     { key: "appointment-request", name: "Appointment Request" },
     { key: "insurance-verification", name: "Insurance Verification" },
@@ -127,7 +218,8 @@ async function main() {
   console.log(`  testimonials: ${seedTestimonials.length}`);
   console.log(`  services:     ${SERVICE_CATALOG.length}`);
   console.log(`  providers:    ${providers.length}`);
-  console.log("  pages:        1 (home, published)");
+  console.log(`  pages:        ${seedPages.length + 1} (home + narrative/legal, published)`);
+  console.log(`  blog posts:   ${posts.length}`);
   console.log(`  forms:        ${forms.length}`);
 }
 
