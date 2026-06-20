@@ -30,7 +30,7 @@ npm run build    # production build
 | 2 — CMS data model + admin editor | ✅ built + verified end-to-end (migrated & seeded) |
 | 3 — Public marketing pages (DB-driven) | ✅ services, providers, locations, home, CMS narrative/legal pages, insurance, reviews, blog, contact |
 | 4 — Forms (Appointment + Insurance) | ✅ encrypted submissions + RBAC admin queue + audited decryption |
-| 5 — Admin Portal (RBAC) | ⬜ |
+| 5 — Admin Portal (RBAC) | ✅ user mgmt, immutable audit log, incident reporting, form management, TOTP MFA enrollment + at-login second factor |
 | 6 — Patient Portal (MFA) | ⬜ |
 | 7 — Intake Portal | ⬜ |
 | 8 — Analytics dashboard | ⬜ |

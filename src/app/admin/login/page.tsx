@@ -34,6 +34,23 @@ function LoginForm() {
           className="mt-1 w-full rounded-lg border border-line px-3 py-2 focus:border-brand-dark"
         />
       </div>
+      {state.needsMfa && (
+        <div>
+          <label htmlFor="token" className="block text-sm font-medium text-ink">
+            Authentication code
+          </label>
+          <input
+            id="token"
+            name="token"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            placeholder="6-digit code"
+            autoFocus
+            className="mt-1 w-full rounded-lg border border-line px-3 py-2 tracking-widest focus:border-brand-dark"
+          />
+          <p className="mt-1 text-xs text-ink-soft">Enter the code from your authenticator app.</p>
+        </div>
+      )}
       {state.error && (
         <p role="alert" className="text-sm text-accent">{state.error}</p>
       )}
@@ -42,7 +59,7 @@ function LoginForm() {
         disabled={pending}
         className="w-full rounded-full bg-brand-dark px-4 py-2.5 font-semibold text-white hover:bg-brand-hover disabled:opacity-60"
       >
-        {pending ? "Signing in…" : "Sign in"}
+        {pending ? "Signing in…" : state.needsMfa ? "Verify & sign in" : "Sign in"}
       </button>
     </form>
   );
