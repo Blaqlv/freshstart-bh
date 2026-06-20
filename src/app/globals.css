@@ -11,7 +11,9 @@
   --color-brand-hover: #5497a0;
   --color-brand-dark: #31585d;
   --color-brand-tint: #eef6f6;
-  --color-accent: #ed1c24;
+  /* Brand red, deepened from #ed1c24 so white-on-accent (crisis banner) and
+     accent-on-white (links/errors) both clear WCAG 2.2 AA 4.5:1. Same hue. */
+  --color-accent: #cc1a22;
   --color-gold: #ffdd00;
   --color-ink: #1a2a2c;
   --color-ink-soft: #475457;

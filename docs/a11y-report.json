@@ -1,0 +1,192 @@
+[
+  {
+    "route": "/",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/about",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/about/leadership",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/about/accreditation",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/services",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/services/psychiatry",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/providers",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/providers/irfan-dahar",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/locations",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/locations/dayton-main",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/insurance",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/insurance/verify",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/resources/blog",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/resources/blog/understanding-anxiety",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/resources/frequently-asked-questions",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/reviews",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/reviews/leave-a-review",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/contact",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/careers",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/accessibility",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/compliance",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/crisis-support",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/privacy/privacy-policy",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/privacy/notice-of-privacy-practices",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/admin/login",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/patient-portal/login",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/intake",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/intake/resume",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/patient-portal",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/patient-portal/appointments",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/patient-portal/messages",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/patient-portal/billing",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/patient-portal/security",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/admin",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/admin/pages",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/admin/submissions",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/admin/users",
+    "violations": [],
+    "criticalCount": 0
+  },
+  {
+    "route": "/dashboard",
+    "violations": [],
+    "criticalCount": 0
+  }
+]

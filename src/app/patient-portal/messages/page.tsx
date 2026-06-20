@@ -33,11 +33,11 @@ export default async function MessagesPage() {
         <form action={startThread} className="mt-4 space-y-3">
           <div>
             <label className="text-xs font-medium text-ink-soft">Subject</label>
-            <input name="subject" required className={input} />
+            <input name="subject" required aria-label="Subject" className={input} />
           </div>
           <div>
             <label className="text-xs font-medium text-ink-soft">Message</label>
-            <textarea name="body" required rows={3} className={input} />
+            <textarea name="body" required rows={3} aria-label="Message" className={input} />
           </div>
           <button className="rounded-full bg-brand-dark px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-hover">
             Send message

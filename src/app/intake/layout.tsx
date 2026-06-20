@@ -14,7 +14,7 @@ export default function IntakeLayout({ children }: { children: React.ReactNode }
       <CrisisBanner />
       <header className="border-b border-line bg-white">
         <div className="mx-auto flex max-w-3xl items-center gap-2 px-4 py-4">
-          <span className="grid h-9 w-9 place-items-center rounded-full bg-brand text-white font-bold">FS</span>
+          <span className="grid h-9 w-9 place-items-center rounded-full bg-brand-dark text-white font-bold">FS</span>
           <div>
             <Link href="/" className="font-bold text-brand-dark">Fresh Start Behavioral Health</Link>
             <p className="text-xs text-ink-soft">New Patient Intake</p>

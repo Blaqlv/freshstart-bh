@@ -38,6 +38,19 @@ accent:       '#ed1c24'
 gold:         '#ffdd00'
 ```
 
+> **WCAG 2.2 AA adjustments (Phase 9 audit).** The hues above are the brand
+> family; two *pairings* were corrected so white-on-color text clears 4.5:1
+> (the brief permits adjusting the pairing, not the brand color):
+> - **Accent red implemented as `#cc1a22`** (deepened from the harvested
+>   `#ed1c24`). White-on-accent (crisis banner) and accent-on-white (links /
+>   error text) were both at 4.35:1; the deeper shade clears 4.5:1 both ways.
+> - **White text never sits on primary teal `#4ba5aa`** (2.89:1). Logo badges,
+>   the hero, and CTA banners use `brand-dark #31585d` (~7.4:1) instead. Teal
+>   remains for decorative fills, progress bars, and chart bars (no text).
+>
+> Verified by an automated axe-core WCAG 2.2 AA scan across 38 routes
+> (`docs/a11y-scan.mjs`) → 0 violations. See `docs/a11y-report.json`.
+
 ## Typography
 
 - **Primary + heading font:** `Rubik, sans-serif` (Google Fonts; preconnected to

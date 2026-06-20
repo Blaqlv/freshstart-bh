@@ -67,6 +67,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
             required
             rows={3}
             placeholder="Write a reply…"
+            aria-label="Reply"
             className="w-full rounded-lg border border-line px-3 py-2 text-sm"
           />
           <button className="rounded-full bg-brand-dark px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-hover">

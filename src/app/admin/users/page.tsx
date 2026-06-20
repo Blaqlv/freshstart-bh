@@ -64,7 +64,7 @@ export default async function UsersAdmin() {
                 <td className="px-4 py-3">
                   <form action={setUserRole} className="flex items-center gap-2">
                     <input type="hidden" name="id" value={u.id} />
-                    <select name="role" defaultValue={u.role} disabled={u.id === session.sub} className="rounded border border-line px-2 py-1 text-xs">
+                    <select name="role" aria-label={`Role for ${u.name}`} defaultValue={u.role} disabled={u.id === session.sub} className="rounded border border-line px-2 py-1 text-xs">
                       {ROLES.map((r) => <option key={r} value={r}>{roleLabels[r]}</option>)}
                     </select>
                     {u.id !== session.sub && <button className="text-xs font-medium text-brand-dark hover:underline">Set</button>}

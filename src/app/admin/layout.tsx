@@ -40,7 +40,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="grid min-h-screen grid-cols-1 bg-surface-alt lg:grid-cols-[260px_1fr]">
       <aside className="border-r border-line bg-white p-4 lg:min-h-screen">
         <div className="mb-6 flex items-center gap-2">
-          <span className="grid h-8 w-8 place-items-center rounded-full bg-brand text-white text-sm font-bold">
+          <span className="grid h-8 w-8 place-items-center rounded-full bg-brand-dark text-white text-sm font-bold">
             FS
           </span>
           <span className="font-bold text-brand-dark">Admin</span>

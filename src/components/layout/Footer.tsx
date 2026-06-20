@@ -38,7 +38,7 @@ export function Footer() {
 
           {/* Contact */}
           <div>
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-white/70">Contact</h2>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-white/80">Contact</h2>
             <a href={site.phoneHref} className="mt-2 block text-lg font-bold hover:underline">
               {site.phone}
             </a>
@@ -62,7 +62,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 border-t border-white/15 pt-6 text-xs text-white/60">
+        <div className="mt-10 border-t border-white/15 pt-6 text-xs text-white/80">
           <p>
             © {new Date().getFullYear()} {site.name}. All rights reserved. Individual results
             are not guaranteed and may vary from person to person.

@@ -70,7 +70,7 @@ export default function AdminLoginPage() {
     <div className="grid min-h-screen place-items-center bg-surface-alt p-4">
       <div className="w-full max-w-sm rounded-2xl border border-line bg-white p-8 shadow-sm">
         <div className="mb-6 flex items-center gap-2">
-          <span className="grid h-9 w-9 place-items-center rounded-full bg-brand text-white font-bold">FS</span>
+          <span className="grid h-9 w-9 place-items-center rounded-full bg-brand-dark text-white font-bold">FS</span>
           <span className="font-bold text-brand-dark">Fresh Start Admin</span>
         </div>
         <h1 className="text-lg font-semibold">Sign in to the admin portal</h1>

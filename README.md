@@ -34,7 +34,7 @@ npm run build    # production build
 | 6 — Patient Portal (MFA) | ✅ separate auth + TOTP MFA, 15-min sliding idle timeout, secure messaging, appointments, refills, documents, billing — PHI fields AES-256 encrypted + audited |
 | 7 — Intake Portal | ✅ multi-step new-patient flow (own pre-credential session), save-and-resume via email + hashed resume code, e-signature, encrypted+audited payload, admin review queue |
 | 8 — Analytics dashboard | ✅ `/dashboard` (role-gated by `dashboard:read`): appointment/conversion KPIs, Medicaid + satisfaction, 6-mo trends, provider/incident/compliance panels, intake funnel, CARF indicators — non-PHI aggregates only |
-| 9 — Accessibility audit | ⬜ |
+| 9 — Accessibility audit | ✅ automated axe-core WCAG 2.2 AA scan across 38 routes → 0 violations; contrast pairings fixed, form controls labelled, skip-link + visible focus verified |
 | 10 — SEO/redirects/sitemap, GTM, deploy | ⬜ (redirects scaffolded in `next.config.ts`) |
 
 ## Database setup (Phase 2)

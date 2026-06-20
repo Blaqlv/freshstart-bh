@@ -51,7 +51,7 @@ async function BlockView({ block }: { block: Block }) {
 
     case "ctaBanner":
       return (
-        <section className="bg-brand py-14 text-white">
+        <section className="bg-brand-dark py-14 text-white">
           <Container className="flex flex-col items-center justify-between gap-4 text-center md:flex-row md:text-left">
             <div>
               <h2 className="text-2xl font-bold">{block.heading}</h2>

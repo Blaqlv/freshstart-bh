@@ -43,7 +43,7 @@ export default async function AppointmentsPage() {
         <form action={requestAppointment} className="mt-4 grid gap-3 sm:grid-cols-2">
           <div>
             <label className="text-xs font-medium text-ink-soft">Location</label>
-            <select name="locationId" className={input} defaultValue="">
+            <select name="locationId" aria-label="Preferred location" className={input} defaultValue="">
               <option value="">No preference</option>
               {locations.map((l) => (
                 <option key={l.id} value={l.id}>{l.name} — {l.city}</option>
@@ -52,7 +52,7 @@ export default async function AppointmentsPage() {
           </div>
           <div>
             <label className="text-xs font-medium text-ink-soft">Service</label>
-            <select name="serviceSlug" className={input} defaultValue="">
+            <select name="serviceSlug" aria-label="Preferred service" className={input} defaultValue="">
               <option value="">No preference</option>
               {services.map((s) => (
                 <option key={s.id} value={s.slug}>{s.title}</option>
@@ -61,11 +61,11 @@ export default async function AppointmentsPage() {
           </div>
           <div>
             <label className="text-xs font-medium text-ink-soft">Preferred date &amp; time</label>
-            <input name="scheduledAt" type="datetime-local" required className={input} />
+            <input name="scheduledAt" type="datetime-local" required aria-label="Appointment date and time" className={input} />
           </div>
           <div className="sm:col-span-2">
             <label className="text-xs font-medium text-ink-soft">Reason for visit (optional, kept private)</label>
-            <textarea name="reason" rows={2} className={input} />
+            <textarea name="reason" rows={2} aria-label="Reason for visit (optional)" className={input} />
           </div>
           <div className="sm:col-span-2">
             <button className="rounded-full bg-brand-dark px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-hover">
@@ -103,7 +103,7 @@ export default async function AppointmentsPage() {
                     <input type="hidden" name="id" value={a.id} />
                     <div>
                       <label className="text-xs font-medium text-ink-soft">Reschedule to</label>
-                      <input name="scheduledAt" type="datetime-local" required className={input} />
+                      <input name="scheduledAt" type="datetime-local" required aria-label="Appointment date and time" className={input} />
                     </div>
                     <button className="rounded-full border border-brand-dark px-4 py-2 text-sm font-medium text-brand-dark hover:bg-brand-tint">
                       Request reschedule

@@ -16,6 +16,7 @@ export function DocumentUpload() {
       <input
         type="file"
         name="file"
+        aria-label="Document to upload"
         accept=".pdf,.jpg,.jpeg,.png,.docx"
         required
         className="block w-full text-sm text-ink file:mr-3 file:rounded-full file:border-0 file:bg-brand-tint file:px-4 file:py-2 file:text-sm file:font-medium file:text-brand-dark"

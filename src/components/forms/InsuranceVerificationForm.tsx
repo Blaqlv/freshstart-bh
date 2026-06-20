@@ -64,6 +64,7 @@ export function InsuranceVerificationForm() {
         <span className={labelCls}>Insurance card (front)</span>
         <input
           type="file"
+          aria-label="Insurance card (front)"
           accept="image/png,image/jpeg,application/pdf"
           onChange={(e) => setCardName(e.target.files?.[0]?.name ?? "")}
           className="mt-1 block w-full text-sm text-ink-soft file:mr-3 file:rounded-full file:border-0 file:bg-brand-dark file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"

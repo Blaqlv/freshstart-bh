@@ -12,7 +12,7 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b border-line bg-white/95 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-2" aria-label="Fresh Start Behavioral Health — home">
-          <span className="grid h-9 w-9 place-items-center rounded-full bg-brand text-white font-bold">
+          <span className="grid h-9 w-9 place-items-center rounded-full bg-brand-dark text-white font-bold">
             FS
           </span>
           <span className="leading-tight">
