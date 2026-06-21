@@ -8,7 +8,18 @@ import {
 } from "../src/lib/site";
 import { seedPages } from "./seed-pages";
 
-const db = new PrismaClient();
+// Default to the standard engine. Set SEED_DRIVER=neon to seed over Neon's HTTP
+// driver instead (useful when the local Prisma query engine can't open a direct
+// 5432 connection, e.g. behind a firewall that only allows 443).
+const db =
+  process.env.SEED_DRIVER === "neon"
+    ? new PrismaClient({
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        adapter: new (require("@prisma/adapter-neon").PrismaNeon)({
+          connectionString: process.env.DATABASE_URL,
+        }),
+      })
+    : new PrismaClient();
 
 // AES-256-GCM matching src/lib/crypto.ts ("v1:iv:tag:ct"). Inlined because
 // crypto.ts is "server-only" and can't be imported into the seed script.
@@ -92,9 +103,22 @@ const USERS: { email: string; name: string; role: Role }[] = [
   { email: "billing@freshstartbh.test", name: "Billing Staff", role: "BILLING_STAFF" },
 ];
 
+// SEED_PROFILE=content seeds real content + a single Administrator only (no demo
+// per-role staff accounts, no demo patient/intake PHI) — intended for production.
+const CONTENT_ONLY = process.env.SEED_PROFILE === "content";
+
 async function main() {
   const passwordHash = bcrypt.hashSync("ChangeMe123!", 10);
-  for (const u of USERS) {
+  const usersToSeed = CONTENT_ONLY
+    ? [
+        {
+          email: (process.env.SEED_ADMIN_EMAIL ?? "admin@freshstartbh.test").toLowerCase().trim(),
+          name: "Site Administrator",
+          role: "ADMINISTRATOR" as Role,
+        },
+      ]
+    : USERS;
+  for (const u of usersToSeed) {
     await db.user.upsert({
       where: { email: u.email },
       update: { name: u.name, role: u.role, active: true },
@@ -226,9 +250,10 @@ async function main() {
     await db.formDefinition.upsert({ where: { key: f.key }, update: { name: f.name }, create: { ...f, schema: [] } });
   }
 
-  // --- Patient Portal demo data -------------------------------------------
+  // --- Patient Portal demo data (skipped for SEED_PROFILE=content) ---------
   // crypto.ts can't be imported here (it's "server-only"); inline the same
   // AES-256-GCM "v1:iv:tag:ct" format so values are decryptable by the app.
+  if (!CONTENT_ONLY) {
   const demoEmail = "patient@freshstartbh.test";
   const demoPatient = await db.patient.upsert({
     where: { email: demoEmail },
@@ -288,9 +313,10 @@ async function main() {
       detailEncrypted: encField("Office visit copay — $45.00"),
     },
   });
+  } // end !CONTENT_ONLY
 
-  console.log("Seed complete:");
-  console.log(`  users:        ${USERS.length} (login: admin@freshstartbh.test / ChangeMe123!)`);
+  console.log("Seed complete" + (CONTENT_ONLY ? " (content-only profile):" : ":"));
+  console.log(`  users:        ${CONTENT_ONLY ? 1 : USERS.length}${CONTENT_ONLY ? " (Administrator only)" : ""}`);
   console.log(`  locations:    ${seedLocations.length}`);
   console.log(`  testimonials: ${seedTestimonials.length}`);
   console.log(`  services:     ${SERVICE_CATALOG.length}`);
@@ -298,7 +324,7 @@ async function main() {
   console.log(`  pages:        ${seedPages.length + 1} (home + narrative/legal, published)`);
   console.log(`  blog posts:   ${posts.length}`);
   console.log(`  forms:        ${forms.length}`);
-  console.log(`  patient:      1 (login: ${demoEmail} / ChangeMe123!)`);
+  if (!CONTENT_ONLY) console.log(`  patient:      1 (demo)`);
 }
 
 main()
