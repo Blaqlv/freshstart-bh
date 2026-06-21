@@ -1,0 +1,36 @@
+# Fly.io deploy config for the clamd + scan service.
+# Usage:
+#   fly launch --no-deploy --copy-config --name freshstart-clamav
+#   fly secrets set SCAN_TOKEN=$(openssl rand -hex 32)
+#   fly deploy
+#   fly scale memory 2048      # clamd needs ~2GB
+# Then in Vercel set:
+#   SCAN_API_URL  = https://freshstart-clamav.fly.dev/scan
+#   SCAN_API_TOKEN = <the SCAN_TOKEN you set above>
+
+app = "freshstart-clamav"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  SCAN_PORT = "8080"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "suspend"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    method = "GET"
+    path = "/healthz"
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "120s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "2gb"

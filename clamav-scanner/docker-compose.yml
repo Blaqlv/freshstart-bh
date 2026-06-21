@@ -1,0 +1,30 @@
+# Two-service alternative (local dev / VPS / Render). The official clamav image
+# runs clamd; a plain node container runs the scan service and reaches clamd over
+# the compose network. Put a TLS-terminating reverse proxy in front for the
+# internet (the app requires https for SCAN_API_URL).
+#
+#   SCAN_TOKEN=$(openssl rand -hex 32) docker compose up -d
+#   curl -fsS localhost:8080/healthz
+
+services:
+  clamav:
+    image: clamav/clamav:1.4
+    restart: unless-stopped
+    # The image ships a HEALTHCHECK; wait for it before starting the scanner.
+
+  scanner:
+    image: node:20-bookworm-slim
+    restart: unless-stopped
+    depends_on:
+      clamav:
+        condition: service_healthy
+    environment:
+      SCAN_TOKEN: ${SCAN_TOKEN:?set SCAN_TOKEN, e.g. export SCAN_TOKEN=$(openssl rand -hex 32)}
+      CLAMD_HOST: clamav
+      CLAMD_PORT: "3310"
+      SCAN_PORT: "8080"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./server.mjs:/app/server.mjs:ro
+    command: ["node", "/app/server.mjs"]

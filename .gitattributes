@@ -1,0 +1,4 @@
+# Shell scripts must use LF so they run inside Linux containers (CRLF breaks the
+# shebang: "bad interpreter: /usr/bin/env bash^M").
+*.sh text eol=lf
+clamav-scanner/entrypoint.sh text eol=lf
