@@ -8,11 +8,11 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 # Make clamd listen on local TCP 3310 (the scan service connects over localhost).
-RUN sed -i 's/^#\?TCPSocket .*/TCPSocket 3310/' /etc/clamav/clamd.conf \
- && sed -i 's/^#\?TCPAddr .*/TCPAddr 127.0.0.1/' /etc/clamav/clamd.conf \
- && sed -i 's/^LocalSocket /#LocalSocket /' /etc/clamav/clamd.conf \
- && echo "MaxStreamSize 64M" >> /etc/clamav/clamd.conf \
- && echo "StreamMaxLength 64M" >> /etc/clamav/clamd.conf
+# Append the directives explicitly — Debian's default clamd.conf ships only a
+# LocalSocket, so a sed-replace of a non-existent TCPSocket line would be a no-op.
+RUN sed -i 's|^LocalSocket |#LocalSocket |' /etc/clamav/clamd.conf \
+ && printf '\nTCPSocket 3310\nTCPAddr 127.0.0.1\nStreamMaxLength 64M\n' >> /etc/clamav/clamd.conf \
+ && sed -i 's|^NotifyClamd|#NotifyClamd|' /etc/clamav/freshclam.conf || true
 
 WORKDIR /app
 COPY server.mjs /app/server.mjs

@@ -78,7 +78,7 @@ function scanWithClamd(buf: Buffer, host: string, port: number): Promise<ScanRes
     });
     socket.on("data", (d) => (response += d.toString()));
     socket.on("end", () => {
-      const r = response.trim();
+      const r = response.replace(/\0/g, "").trim(); // z-commands NUL-terminate
       if (/\bOK$/.test(r)) resolve({ clean: true, engine: "clamav" });
       else {
         const sig = r.match(/:\s(.+)\sFOUND/)?.[1];

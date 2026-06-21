@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-mkdir -p /var/lib/clamav
-chown -R clamav:clamav /var/lib/clamav || true
+mkdir -p /var/lib/clamav /run/clamav
+chown -R clamav:clamav /var/lib/clamav /run/clamav || true
 
 # 1. Fetch virus definitions before clamd starts (clamd won't load without a DB).
 echo "[entrypoint] updating virus definitions (freshclam)…"
