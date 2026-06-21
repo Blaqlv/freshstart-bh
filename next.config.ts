@@ -31,9 +31,27 @@ const legacyRedirects = [
   { source: "/schedule-appointment", destination: "/contact#appointment" },
 ];
 
+// Canonical production host (derived from NEXT_PUBLIC_SITE_URL). Anything served
+// on a different host — preview deploys, *.vercel.app — gets a noindex header so
+// only the real domain is indexed.
+const PROD_HOST = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://freshstartbhinc.com")
+  .replace(/^https?:\/\//, "")
+  .replace(/\/.*$/, "");
+const PROD_HOST_RE = `(www\\.)?${PROD_HOST.replace(/\./g, "\\.")}`;
+
 const nextConfig: NextConfig = {
   async redirects() {
     return legacyRedirects.map((r) => ({ ...r, permanent: true }));
+  },
+  async headers() {
+    return [
+      {
+        // Applies when the request host is NOT the production domain.
+        source: "/:path*",
+        missing: [{ type: "host", value: PROD_HOST_RE }],
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+    ];
   },
 };
 
