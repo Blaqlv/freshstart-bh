@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { parseBlocks } from "@/lib/cms/blocks";
-import { BlockRenderer } from "@/components/cms/BlockRenderer";
+import { ServiceDetailTemplate } from "@/components/templates/ServiceDetailTemplate";
+import { GeneralTemplate } from "@/components/templates/GeneralTemplate";
 
 export const dynamic = "force-dynamic";
 
@@ -40,5 +41,8 @@ export default async function CmsPage({ params }: { params: Promise<{ slug: stri
     page.versions.find((v) => v.version === page.publishedVersion) ?? page.versions[0];
   const blocks = parseBlocks(version?.blocks);
 
-  return <BlockRenderer blocks={blocks} />;
+  if (page.template === "SERVICE_DETAIL") {
+    return <ServiceDetailTemplate page={page} blocks={blocks} />;
+  }
+  return <GeneralTemplate page={page} blocks={blocks} />;
 }
