@@ -386,6 +386,74 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (patch: Part
           <button type="button" className="text-sm font-medium text-brand-dark" onClick={() => onChange({ columns: [...block.columns, { title: "", body: "" }] } as Partial<Block>)}>+ Add column</button>
         </>
       );
+    case "imageLeftTextRight":
+    case "imageRightTextLeft":
+      return (
+        <>
+          <Field label="Image URL" value={block.image.url} onChange={(v) => onChange({ image: { ...block.image, url: v } } as Partial<Block>)} />
+          <Field label="Image alt text" value={block.image.alt} onChange={(v) => onChange({ image: { ...block.image, alt: v } } as Partial<Block>)} />
+          <Radio
+            label="Image width"
+            value={String(block.imageWidthPercent ?? 50)}
+            options={[{ value: "40", label: "40%" }, { value: "45", label: "45%" }, { value: "50", label: "50%" }]}
+            onChange={(v) => onChange({ imageWidthPercent: Number(v) } as Partial<Block>)}
+          />
+          <Field label="Title" value={block.title} onChange={(v) => onChange({ title: v } as Partial<Block>)} />
+          <RichField label="Body" value={block.body} onChange={(v) => onChange({ body: v } as Partial<Block>)} />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="CTA label" value={block.ctaLabel ?? ""} onChange={(v) => onChange({ ctaLabel: v } as Partial<Block>)} />
+            <Field label="CTA link" value={block.ctaHref ?? ""} onChange={(v) => onChange({ ctaHref: v } as Partial<Block>)} />
+          </div>
+        </>
+      );
+    case "imageTitleBelow":
+      return (
+        <>
+          <Field label="Image URL" value={block.image.url} onChange={(v) => onChange({ image: { ...block.image, url: v } } as Partial<Block>)} />
+          <Field label="Image alt text" value={block.image.alt} onChange={(v) => onChange({ image: { ...block.image, alt: v } } as Partial<Block>)} />
+          <Radio
+            label="Aspect ratio"
+            value={block.aspectRatio ?? "16/9"}
+            options={[{ value: "16/9", label: "16:9" }, { value: "4/3", label: "4:3" }, { value: "1/1", label: "1:1" }, { value: "3/2", label: "3:2" }]}
+            onChange={(v) => onChange({ aspectRatio: v } as Partial<Block>)}
+          />
+          <Radio
+            label="Max width"
+            value={block.maxWidth ?? "lg"}
+            options={[{ value: "sm", label: "Small" }, { value: "md", label: "Medium" }, { value: "lg", label: "Large" }, { value: "full", label: "Full" }]}
+            onChange={(v) => onChange({ maxWidth: v } as Partial<Block>)}
+          />
+          <Field label="Title" value={block.title} onChange={(v) => onChange({ title: v } as Partial<Block>)} />
+          <RichField label="Caption" value={block.caption ?? ""} onChange={(v) => onChange({ caption: v } as Partial<Block>)} minimal />
+        </>
+      );
+    case "imageTitleBeside":
+      return (
+        <>
+          <Field label="Image URL" value={block.image.url} onChange={(v) => onChange({ image: { ...block.image, url: v } } as Partial<Block>)} />
+          <Field label="Image alt text" value={block.image.alt} onChange={(v) => onChange({ image: { ...block.image, alt: v } } as Partial<Block>)} />
+          <Radio
+            label="Image position"
+            value={block.imagePosition}
+            options={[{ value: "left", label: "Left" }, { value: "right", label: "Right" }]}
+            onChange={(v) => onChange({ imagePosition: v } as Partial<Block>)}
+          />
+          <Radio
+            label="Image size"
+            value={block.imageSize ?? "md"}
+            options={[{ value: "sm", label: "Small (30%)" }, { value: "md", label: "Medium (40%)" }, { value: "lg", label: "Large (50%)" }]}
+            onChange={(v) => onChange({ imageSize: v } as Partial<Block>)}
+          />
+          <Radio
+            label="Vertical alignment"
+            value={block.verticalAlign ?? "top"}
+            options={[{ value: "top", label: "Top" }, { value: "center", label: "Centre" }]}
+            onChange={(v) => onChange({ verticalAlign: v } as Partial<Block>)}
+          />
+          <Field label="Title" value={block.title} onChange={(v) => onChange({ title: v } as Partial<Block>)} />
+          <RichField label="Body" value={block.body} onChange={(v) => onChange({ body: v } as Partial<Block>)} />
+        </>
+      );
     default:
       return null;
   }
