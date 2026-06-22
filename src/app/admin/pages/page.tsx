@@ -1,16 +1,36 @@
-import Link from "next/link";
 import { db } from "@/lib/db";
 import { requireCapability } from "@/lib/auth";
 import { can } from "@/lib/rbac";
 import { createPage } from "./actions";
-import { StatusBadge } from "@/components/admin/StatusBadge";
+import { PagesBrowser } from "@/components/admin/PagesBrowser";
 
 export const dynamic = "force-dynamic";
 
-export default async function PagesList() {
+export default async function PagesList({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
   const session = await requireCapability("content:read");
   const canWrite = can(session.role, "content:write");
+  const sp = await searchParams;
+
   const pages = await db.page.findMany({ orderBy: { updatedAt: "desc" } });
+  const rows = pages.map((p) => ({
+    id: p.id,
+    title: p.title,
+    slug: p.slug,
+    status: p.status,
+    template: p.template,
+    hasSidebar: p.hasSidebar,
+    updated: p.updatedAt.toLocaleDateString(),
+  }));
+  const initial = {
+    template: sp.template ?? "",
+    status: sp.status ?? "",
+    sidebar: sp.sidebar ?? "",
+    q: sp.q ?? "",
+  };
 
   return (
     <div className="space-y-6">
@@ -38,39 +58,7 @@ export default async function PagesList() {
         )}
       </div>
 
-      <div className="overflow-hidden rounded-card border border-line bg-white">
-        <table className="w-full text-sm">
-          <thead className="bg-surface-alt text-left text-ink-soft">
-            <tr>
-              <th className="px-4 py-3 font-medium">Title</th>
-              <th className="px-4 py-3 font-medium">Slug</th>
-              <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium">Updated</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-line">
-            {pages.length === 0 && (
-              <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-ink-soft">
-                  No pages yet. Create your first page above.
-                </td>
-              </tr>
-            )}
-            {pages.map((p) => (
-              <tr key={p.id} className="hover:bg-surface-alt">
-                <td className="px-4 py-3">
-                  <Link href={`/admin/pages/${p.id}`} className="font-medium text-brand-dark hover:underline">
-                    {p.title}
-                  </Link>
-                </td>
-                <td className="px-4 py-3 text-ink-soft">/{p.slug}</td>
-                <td className="px-4 py-3"><StatusBadge status={p.status} /></td>
-                <td className="px-4 py-3 text-ink-soft">{p.updatedAt.toLocaleDateString()}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <PagesBrowser rows={rows} initial={initial} />
     </div>
   );
 }
