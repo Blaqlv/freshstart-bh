@@ -1,5 +1,5 @@
 import { Container } from "@/components/ui/Container";
-import { Paragraphs } from "./Paragraphs";
+import { RichBody } from "./RichBody";
 import type { ImageTitleBesideBlock as ImageTitleBesideBlockType } from "@/lib/cms/blocks";
 
 const sizeClass: Record<"left" | "right", Record<string, string>> = {
@@ -34,7 +34,7 @@ export function ImageTitleBesideBlock({ block }: { block: ImageTitleBesideBlockT
         </div>
         <div className={isRight ? "md:order-1" : ""}>
           <h2 className="text-2xl font-bold text-brand-dark">{block.title}</h2>
-          <Paragraphs text={block.body} className="mt-3 space-y-4 text-ink-soft" />
+          <RichBody text={block.body} className="mt-3 space-y-4 text-ink-soft" />
         </div>
       </Container>
     </section>

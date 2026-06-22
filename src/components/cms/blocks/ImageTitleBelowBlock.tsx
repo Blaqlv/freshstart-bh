@@ -1,5 +1,5 @@
 import { Container } from "@/components/ui/Container";
-import { Paragraphs } from "./Paragraphs";
+import { RichBody } from "./RichBody";
 import type { ImageTitleBelowBlock as ImageTitleBelowBlockType } from "@/lib/cms/blocks";
 
 const aspectClass: Record<string, string> = {
@@ -30,7 +30,7 @@ export function ImageTitleBelowBlock({ block }: { block: ImageTitleBelowBlockTyp
         )}
         <h2 className="mt-4 text-2xl font-bold text-brand-dark">{block.title}</h2>
         {block.caption && (
-          <Paragraphs text={block.caption} className="mt-2 space-y-2 text-ink-soft" />
+          <RichBody text={block.caption} className="mt-2 space-y-2 text-ink-soft" />
         )}
       </Container>
     </section>
