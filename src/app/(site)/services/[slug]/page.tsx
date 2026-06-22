@@ -41,16 +41,8 @@ export default async function ServiceDetail({ params }: { params: Promise<{ slug
     <>
       <section className="bg-brand-dark text-white">
         <Container className="py-14">
-          <nav aria-label="Breadcrumb" className="text-sm text-white/70">
-            <ol className="flex flex-wrap gap-2">
-              <li><Link href="/" className="hover:underline">Home</Link></li>
-              <li aria-hidden>/</li>
-              <li><Link href="/services" className="hover:underline">Services</Link></li>
-              <li aria-hidden>/</li>
-              <li aria-current="page" className="text-white">{service.title}</li>
-            </ol>
-          </nav>
-          <h1 className="mt-4 text-4xl font-bold sm:text-5xl">{service.title}</h1>
+          {/* Breadcrumbs removed per design update - Prompt 4. Do not restore without explicit instruction. */}
+          <h1 className="text-4xl font-bold sm:text-5xl">{service.title}</h1>
           {service.summary && <p className="mt-4 max-w-2xl text-lg text-white/85">{service.summary}</p>}
           <div className="mt-8 flex flex-wrap gap-3">
             <Button href="/contact#appointment" variant="white">Book an Assessment</Button>
