@@ -363,6 +363,29 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (patch: Part
           <button type="button" className="text-sm font-medium text-brand-dark" onClick={() => onChange({ items: [...block.items, { icon: "CheckCircle2", label: "", body: "" }] } as Partial<Block>)}>+ Add item</button>
         </>
       );
+    case "richTextColumns":
+      return (
+        <>
+          <Field label="Heading" value={block.heading ?? ""} onChange={(v) => onChange({ heading: v } as Partial<Block>)} />
+          <RichField label="Intro" value={block.intro ?? ""} onChange={(v) => onChange({ intro: v } as Partial<Block>)} />
+          <Toggle label="Vertical dividers between columns" checked={!!block.dividers} onChange={(v) => onChange({ dividers: v } as Partial<Block>)} />
+          {block.columns.map((col, idx) => (
+            <div key={idx} className="space-y-2 rounded-lg border border-line p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-ink-soft">Column {idx + 1}</span>
+                <div className="flex gap-1">
+                  <button type="button" aria-label="Move column up" className="rounded p-1 hover:bg-surface-alt" onClick={() => onChange({ columns: moved(block.columns, idx, -1) } as Partial<Block>)}>↑</button>
+                  <button type="button" aria-label="Move column down" className="rounded p-1 hover:bg-surface-alt" onClick={() => onChange({ columns: moved(block.columns, idx, 1) } as Partial<Block>)}>↓</button>
+                  <button type="button" aria-label="Remove column" className="rounded p-1 text-accent hover:bg-surface-alt" onClick={() => onChange({ columns: block.columns.filter((_, k) => k !== idx) } as Partial<Block>)}>✕</button>
+                </div>
+              </div>
+              <Field label="Column title" value={col.title ?? ""} onChange={(v) => onChange({ columns: block.columns.map((x, k) => (k === idx ? { ...x, title: v } : x)) } as Partial<Block>)} />
+              <RichField label="Body" value={col.body} onChange={(v) => onChange({ columns: block.columns.map((x, k) => (k === idx ? { ...x, body: v } : x)) } as Partial<Block>)} />
+            </div>
+          ))}
+          <button type="button" className="text-sm font-medium text-brand-dark" onClick={() => onChange({ columns: [...block.columns, { title: "", body: "" }] } as Partial<Block>)}>+ Add column</button>
+        </>
+      );
     default:
       return null;
   }
