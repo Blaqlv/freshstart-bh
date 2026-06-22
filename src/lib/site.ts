@@ -194,9 +194,10 @@ export const primaryNav = [
     label: "About",
     href: "/about",
     children: [
+      { label: "Staff", href: "/providers" },
       { label: "Leadership", href: "/about/leadership" },
+      { label: "Careers", href: "/about/careers" },
       { label: "Accreditation", href: "/about/accreditation" },
-      { label: "Careers", href: "/careers" },
     ],
   },
   {
@@ -212,7 +213,6 @@ export const primaryNav = [
     ],
   },
   { label: "Locations", href: "/locations" },
-  { label: "Providers", href: "/providers" },
   { label: "Insurance", href: "/insurance" },
   {
     label: "Resources",
