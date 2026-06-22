@@ -38,13 +38,23 @@ export function MediaPicker({
 
   useEffect(() => {
     if (!open || tab !== "library") return;
-    setLoading(true);
-    setError(null);
-    fetch("/api/admin/media")
-      .then((r) => r.json())
-      .then((d) => setItems(d.items ?? []))
-      .catch(() => setError("Could not load media library."))
-      .finally(() => setLoading(false));
+    let active = true;
+    void (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const r = await fetch("/api/admin/media");
+        const d = await r.json();
+        if (active) setItems(d.items ?? []);
+      } catch {
+        if (active) setError("Could not load media library.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
   }, [open, tab]);
 
   async function handleFile(file: File) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { createElement, useState } from "react";
 import { resolveIcon } from "@/lib/cms/resolveIcon";
 
 // Curated, searchable set (the prompt's required icons + common care-domain extras).
@@ -23,7 +23,6 @@ export function IconPicker({
 }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
-  const Current = resolveIcon(value ?? "");
   const filtered = ICON_NAMES.filter((n) => n.toLowerCase().includes(q.toLowerCase()));
 
   return (
@@ -33,7 +32,7 @@ export function IconPicker({
         onClick={() => setOpen(true)}
         className="inline-flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm text-ink hover:border-brand-dark"
       >
-        <Current className="h-4 w-4" aria-hidden />
+        {createElement(resolveIcon(value ?? ""), { className: "h-4 w-4", "aria-hidden": true })}
         {value || "Choose icon"}
       </button>
 
