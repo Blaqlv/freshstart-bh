@@ -143,10 +143,28 @@ export function PageEditor({
           </p>
         )}
         {blocks.map((block, i) => (
-          <div key={i} className="rounded-card border border-line bg-white">
+          <div
+            key={i}
+            className={`rounded-card border border-line bg-white ${block.isVisible === false ? "opacity-60" : ""}`}
+          >
             <div className="flex items-center justify-between border-b border-line bg-surface-alt px-4 py-2">
-              <span className="text-sm font-semibold text-brand-dark">{blockLabel(block.type)}</span>
+              <span className="text-sm font-semibold text-brand-dark">
+                {blockLabel(block.type)}
+                {block.isVisible === false && (
+                  <span className="ml-2 rounded bg-surface-alt px-1.5 py-0.5 text-xs font-normal text-ink-soft">
+                    Hidden
+                  </span>
+                )}
+              </span>
               <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => update(i, { isVisible: block.isVisible === false } as Partial<Block>)}
+                  aria-label={block.isVisible === false ? "Show block" : "Hide block"}
+                  className="rounded p-1 hover:bg-white"
+                >
+                  {block.isVisible === false ? "🙈" : "👁"}
+                </button>
                 <button type="button" onClick={() => move(i, -1)} aria-label="Move up" className="rounded p-1 hover:bg-white">↑</button>
                 <button type="button" onClick={() => move(i, 1)} aria-label="Move down" className="rounded p-1 hover:bg-white">↓</button>
                 <button type="button" onClick={() => remove(i)} aria-label="Remove block" className="rounded p-1 text-accent hover:bg-white">✕</button>
