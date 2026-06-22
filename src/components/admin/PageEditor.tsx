@@ -10,6 +10,7 @@ import {
 import { savePage, publishPage } from "@/app/admin/pages/actions";
 import { StatusBadge } from "./StatusBadge";
 import type { ContentStatus } from "@prisma/client";
+import { RichTextEditor } from "./RichTextEditor";
 
 type PageData = {
   id: string;
@@ -184,7 +185,7 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (patch: Part
         <>
           <Field label="Eyebrow" value={block.eyebrow ?? ""} onChange={(v) => onChange({ eyebrow: v } as Partial<Block>)} />
           <Field label="Heading" value={block.heading} onChange={(v) => onChange({ heading: v } as Partial<Block>)} />
-          <Area label="Body" value={block.body ?? ""} onChange={(v) => onChange({ body: v } as Partial<Block>)} />
+          <RichField label="Body" value={block.body ?? ""} onChange={(v) => onChange({ body: v } as Partial<Block>)} minimal />
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="CTA label" value={block.primaryCtaLabel ?? ""} onChange={(v) => onChange({ primaryCtaLabel: v } as Partial<Block>)} />
             <Field label="CTA link" value={block.primaryCtaHref ?? ""} onChange={(v) => onChange({ primaryCtaHref: v } as Partial<Block>)} />
@@ -195,14 +196,14 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (patch: Part
       return (
         <>
           <Field label="Heading" value={block.heading ?? ""} onChange={(v) => onChange({ heading: v } as Partial<Block>)} />
-          <Area label="Body (blank line = new paragraph)" value={block.body} onChange={(v) => onChange({ body: v } as Partial<Block>)} />
+          <RichField label="Body" value={block.body} onChange={(v) => onChange({ body: v } as Partial<Block>)} />
         </>
       );
     case "ctaBanner":
       return (
         <>
           <Field label="Heading" value={block.heading} onChange={(v) => onChange({ heading: v } as Partial<Block>)} />
-          <Field label="Body" value={block.body ?? ""} onChange={(v) => onChange({ body: v } as Partial<Block>)} />
+          <RichField label="Body" value={block.body ?? ""} onChange={(v) => onChange({ body: v } as Partial<Block>)} minimal />
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="CTA label" value={block.ctaLabel ?? ""} onChange={(v) => onChange({ ctaLabel: v } as Partial<Block>)} />
             <Field label="CTA link" value={block.ctaHref ?? ""} onChange={(v) => onChange({ ctaHref: v } as Partial<Block>)} />
@@ -220,7 +221,7 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (patch: Part
                 value={it.q}
                 onChange={(v) => onChange({ items: block.items.map((x, k) => (k === idx ? { ...x, q: v } : x)) } as Partial<Block>)}
               />
-              <Area
+              <RichField
                 label="Answer"
                 value={it.a}
                 onChange={(v) => onChange({ items: block.items.map((x, k) => (k === idx ? { ...x, a: v } : x)) } as Partial<Block>)}
@@ -268,11 +269,29 @@ function Field({ label, value, onChange }: { label: string; value: string; onCha
     </label>
   );
 }
-function Area({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+function RichField({
+  label,
+  value,
+  onChange,
+  minimal = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  minimal?: boolean;
+}) {
   return (
-    <label className="block">
+    <div>
       <span className={labelCls}>{label}</span>
-      <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={3} className={input} />
-    </label>
+      <div className="mt-1">
+        <RichTextEditor
+          value={value}
+          onChange={onChange}
+          minimalMode={minimal}
+          ariaLabel={label}
+          height={minimal ? 200 : 320}
+        />
+      </div>
+    </div>
   );
 }

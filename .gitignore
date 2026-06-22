@@ -47,3 +47,6 @@ next-env.d.ts
 .env
 .vercel
 docs/_discovery/*.html
+
+# self-hosted TinyMCE assets (vendored from node_modules by postinstall)
+/public/tinymce

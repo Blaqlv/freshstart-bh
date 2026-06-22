@@ -1,6 +1,6 @@
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
-import { Paragraphs } from "./Paragraphs";
+import { RichBody } from "./RichBody";
 import type { ImageTextSplitFields } from "@/lib/cms/blocks";
 
 const gridClass: Record<"left" | "right", Record<number, string>> = {
@@ -41,7 +41,7 @@ export function ImageTextSplitBlock({
         </div>
         <div className={isRight ? "md:order-1" : ""}>
           <h2 className="text-2xl font-bold text-brand-dark">{block.title}</h2>
-          <Paragraphs text={block.body} className="mt-3 space-y-4 text-ink-soft" />
+          <RichBody text={block.body} className="mt-3 space-y-4 text-ink-soft" />
           {block.ctaLabel && block.ctaHref && (
             <div className="mt-5">
               <Button href={block.ctaHref}>{block.ctaLabel}</Button>

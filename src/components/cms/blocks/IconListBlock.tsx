@@ -1,5 +1,5 @@
 import { Container } from "@/components/ui/Container";
-import { Paragraphs } from "./Paragraphs";
+import { RichBody } from "./RichBody";
 import { resolveIcon } from "@/lib/cms/resolveIcon";
 import type { IconListBlock as IconListBlockType } from "@/lib/cms/blocks";
 
@@ -16,7 +16,7 @@ export function IconListBlock({ block }: { block: IconListBlockType }) {
       <Container>
         {block.title && <h2 className="text-2xl font-bold text-brand-dark">{block.title}</h2>}
         {block.intro && (
-          <Paragraphs text={block.intro} className="mt-3 space-y-4 text-ink-soft" />
+          <RichBody text={block.intro} className="mt-3 space-y-4 text-ink-soft" />
         )}
         <ul className={`mt-6 grid gap-6 ${cols}`}>
           {block.items.map((item, i) => {
@@ -31,7 +31,7 @@ export function IconListBlock({ block }: { block: IconListBlockType }) {
                 <div>
                   <h3 className="font-semibold text-brand-dark">{item.label}</h3>
                   {item.body && (
-                    <Paragraphs text={item.body} className="mt-1 space-y-2 text-sm text-ink-soft" />
+                    <RichBody text={item.body} className="mt-1 space-y-2 text-sm text-ink-soft" />
                   )}
                 </div>
               </li>

@@ -1,5 +1,5 @@
 import { Container } from "@/components/ui/Container";
-import { Paragraphs } from "./Paragraphs";
+import { RichBody } from "./RichBody";
 import type { RichTextColumnsBlock as RichTextColumnsBlockType } from "@/lib/cms/blocks";
 
 const gridByCount: Record<number, string> = {
@@ -15,7 +15,7 @@ export function RichTextColumnsBlock({ block }: { block: RichTextColumnsBlockTyp
       <Container>
         {block.heading && <h2 className="text-2xl font-bold text-brand-dark">{block.heading}</h2>}
         {block.intro && (
-          <Paragraphs text={block.intro} className="mt-3 max-w-3xl space-y-4 text-ink-soft" />
+          <RichBody text={block.intro} className="mt-3 max-w-3xl space-y-4 text-ink-soft" />
         )}
         <div className={`mt-6 grid grid-cols-1 gap-8 ${grid}`}>
           {block.columns.map((col, i) => (
@@ -24,7 +24,7 @@ export function RichTextColumnsBlock({ block }: { block: RichTextColumnsBlockTyp
               className={block.dividers && i > 0 ? "md:border-l md:border-line md:pl-8" : ""}
             >
               {col.title && <h3 className="font-semibold text-brand-dark">{col.title}</h3>}
-              <Paragraphs text={col.body} className="mt-2 space-y-3 text-ink-soft" />
+              <RichBody text={col.body} className="mt-2 space-y-3 text-ink-soft" />
             </div>
           ))}
         </div>
