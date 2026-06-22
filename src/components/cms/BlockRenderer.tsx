@@ -9,6 +9,7 @@ import { RichTextColumnsBlock } from "./blocks/RichTextColumnsBlock";
 import { ImageTextSplitBlock } from "./blocks/ImageTextSplitBlock";
 import { ImageTitleBelowBlock } from "./blocks/ImageTitleBelowBlock";
 import { ImageTitleBesideBlock } from "./blocks/ImageTitleBesideBlock";
+import { RichBody } from "./blocks/RichBody";
 
 /** Renders an ordered list of CMS blocks. Server component (queries live data). */
 export async function BlockRenderer({ blocks }: { blocks: Block[] }) {
@@ -31,7 +32,7 @@ async function BlockView({ block }: { block: Block }) {
               <p className="text-sm font-semibold uppercase tracking-wide text-white/70">{block.eyebrow}</p>
             )}
             <h1 className="mt-2 text-4xl font-bold sm:text-5xl">{block.heading}</h1>
-            {block.body && <p className="mt-4 max-w-2xl text-lg text-white/85">{block.body}</p>}
+            {block.body && <RichBody text={block.body} className="mt-4 max-w-2xl text-lg text-white/85" />}
             {block.primaryCtaLabel && block.primaryCtaHref && (
               <div className="mt-6">
                 <Button href={block.primaryCtaHref} variant="white">{block.primaryCtaLabel}</Button>
@@ -46,11 +47,7 @@ async function BlockView({ block }: { block: Block }) {
         <section className="py-12">
           <Container className="max-w-3xl">
             {block.heading && <h2 className="text-2xl font-bold text-brand-dark">{block.heading}</h2>}
-            <div className="mt-3 space-y-4 text-ink-soft">
-              {block.body.split(/\n\s*\n/).map((p, k) => (
-                <p key={k}>{p}</p>
-              ))}
-            </div>
+            <RichBody text={block.body} className="mt-3 space-y-4 text-ink-soft" />
           </Container>
         </section>
       );
@@ -61,7 +58,7 @@ async function BlockView({ block }: { block: Block }) {
           <Container className="flex flex-col items-center justify-between gap-4 text-center md:flex-row md:text-left">
             <div>
               <h2 className="text-2xl font-bold">{block.heading}</h2>
-              {block.body && <p className="mt-1 text-white/90">{block.body}</p>}
+              {block.body && <RichBody text={block.body} className="mt-1 text-white/90" />}
             </div>
             {block.ctaLabel && block.ctaHref && (
               <Button href={block.ctaHref} variant="white">{block.ctaLabel}</Button>
@@ -82,7 +79,7 @@ async function BlockView({ block }: { block: Block }) {
                     {f.q}
                     <span aria-hidden className="ml-4 transition group-open:rotate-45">+</span>
                   </summary>
-                  <p className="mt-3 text-ink-soft">{f.a}</p>
+                  <RichBody text={f.a} className="mt-3 text-ink-soft" />
                 </details>
               ))}
             </div>
