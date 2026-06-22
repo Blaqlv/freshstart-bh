@@ -53,9 +53,9 @@ export default function AccreditationPage() {
             <Image
               src="/images/accreditations/carf_cert.png"
               alt="CARF Accreditation Certificate"
-              width={480}
-              height={340}
-              className="rounded-lg object-contain shadow-md"
+              width={350}
+              height={250}
+              className="h-auto w-full max-w-sm rounded-lg object-contain shadow-md"
               priority
             />
           </div>
@@ -70,9 +70,9 @@ export default function AccreditationPage() {
             <Image
               src="/images/accreditations/ohio_mhas.png"
               alt="Ohio MHAS Certification"
-              width={480}
-              height={340}
-              className="rounded-lg object-contain shadow-md"
+              width={267}
+              height={92}
+              className="h-auto w-full max-w-sm rounded-lg object-contain"
             />
           </div>
           <div className="order-1 md:order-2">
@@ -91,20 +91,20 @@ export default function AccreditationPage() {
 
         {/* Trust-badge row */}
         <div className="mt-8 rounded-card border border-line bg-brand-tint/40 px-6 py-10 text-center">
-          <div className="flex flex-wrap items-center justify-center gap-8">
+          <div className="flex flex-wrap items-center justify-center gap-10">
             <Image
               src="/images/accreditations/carf_cert.png"
               alt="CARF Accreditation"
-              width={160}
-              height={113}
-              className="rounded-md object-contain shadow-sm"
+              width={350}
+              height={250}
+              className="h-20 w-auto object-contain"
             />
             <Image
               src="/images/accreditations/ohio_mhas.png"
               alt="Ohio MHAS Certification"
-              width={160}
-              height={113}
-              className="rounded-md object-contain shadow-sm"
+              width={267}
+              height={92}
+              className="h-12 w-auto object-contain"
             />
           </div>
           <p className="mt-6 text-sm font-medium text-ink-soft">
