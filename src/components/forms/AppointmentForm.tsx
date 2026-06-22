@@ -17,9 +17,12 @@ const labelCls = "block text-sm font-medium text-ink";
 export function AppointmentForm({
   locations,
   services,
+  defaultService = "",
 }: {
   locations: Option[];
   services: Option[];
+  /** Optional service slug to pre-select in the Preferred service dropdown. */
+  defaultService?: string;
 }) {
   const [state, action, pending] = useActionState<FormState, FormData>(submitAppointment, {});
 
@@ -73,7 +76,7 @@ export function AppointmentForm({
         </label>
         <label className="block">
           <span className={labelCls}>Preferred service</span>
-          <select name="service" required className={field} defaultValue="">
+          <select name="service" required className={field} defaultValue={defaultService}>
             <option value="" disabled>Select a service</option>
             {services.map((s) => (
               <option key={s.value} value={s.value}>{s.label}</option>
