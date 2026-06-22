@@ -24,7 +24,9 @@ const DESCRIPTION =
 const TITLE = "Sober Living Home in Dayton, OH | Fresh Start Behavioral Health";
 
 export const metadata: Metadata = {
-  title: TITLE,
+  // `absolute` bypasses the root layout's "%s | Fresh Start Behavioral Health"
+  // template, since TITLE already includes the brand suffix.
+  title: { absolute: TITLE },
   description: DESCRIPTION,
   alternates: { canonical: PAGE_URL },
   openGraph: { title: TITLE, description: DESCRIPTION, url: PAGE_URL, type: "website" },
