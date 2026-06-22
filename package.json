@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "postinstall": "prisma generate",
+    "postinstall": "prisma generate && node scripts/copy-tinymce.mjs",
     "lint": "eslint",
     "a11y": "node docs/a11y-scan.mjs",
     "db:generate": "prisma generate",
