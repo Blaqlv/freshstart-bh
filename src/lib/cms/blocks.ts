@@ -12,7 +12,14 @@ export type BlockType =
   | "testimonialCarousel"
   | "locationGrid"
   | "teamGrid"
-  | "ctaBanner";
+  | "ctaBanner"
+  | "numberedList"
+  | "iconList"
+  | "richTextColumns"
+  | "imageLeftTextRight"
+  | "imageRightTextLeft"
+  | "imageTitleBelow"
+  | "imageTitleBeside";
 
 export type HeroBlock = {
   type: "hero";
@@ -65,6 +72,63 @@ export type CtaBannerBlock = {
   ctaHref?: string;
 };
 
+export type NumberedListBlock = {
+  type: "numberedList";
+  title?: string;
+  intro?: string;
+  items: { heading: string; body?: string }[];
+  numberStyle?: "circle" | "square" | "plain";
+  columns?: 1 | 2;
+};
+
+export type IconListBlock = {
+  type: "iconList";
+  title?: string;
+  intro?: string;
+  items: { icon: string; label: string; body?: string }[];
+  iconColor?: string;
+  columns?: 1 | 2 | 3;
+};
+
+export type RichTextColumnsBlock = {
+  type: "richTextColumns";
+  heading?: string;
+  intro?: string;
+  columns: { title?: string; body: string }[];
+  dividers?: boolean;
+};
+
+/** Shared fields for the two image/text split blocks. */
+export type ImageTextSplitFields = {
+  image: { url: string; alt: string };
+  title: string;
+  body: string;
+  ctaLabel?: string;
+  ctaHref?: string;
+  imageWidthPercent?: 40 | 45 | 50;
+};
+export type ImageLeftTextRightBlock = ImageTextSplitFields & { type: "imageLeftTextRight" };
+export type ImageRightTextLeftBlock = ImageTextSplitFields & { type: "imageRightTextLeft" };
+
+export type ImageTitleBelowBlock = {
+  type: "imageTitleBelow";
+  image: { url: string; alt: string };
+  title: string;
+  caption?: string;
+  aspectRatio?: "16/9" | "4/3" | "1/1" | "3/2";
+  maxWidth?: "sm" | "md" | "lg" | "full";
+};
+
+export type ImageTitleBesideBlock = {
+  type: "imageTitleBeside";
+  image: { url: string; alt: string };
+  imagePosition: "left" | "right";
+  title: string;
+  body: string;
+  imageSize?: "sm" | "md" | "lg";
+  verticalAlign?: "top" | "center";
+};
+
 export type Block =
   | HeroBlock
   | RichTextBlock
@@ -73,7 +137,14 @@ export type Block =
   | TestimonialCarouselBlock
   | LocationGridBlock
   | TeamGridBlock
-  | CtaBannerBlock;
+  | CtaBannerBlock
+  | NumberedListBlock
+  | IconListBlock
+  | RichTextColumnsBlock
+  | ImageLeftTextRightBlock
+  | ImageRightTextLeftBlock
+  | ImageTitleBelowBlock
+  | ImageTitleBesideBlock;
 
 type BlockMeta = {
   type: BlockType;
@@ -138,6 +209,93 @@ export const blockRegistry: BlockMeta[] = [
       heading: "Ready to get started?",
       ctaLabel: "Contact us",
       ctaHref: "/contact",
+    }),
+  },
+  {
+    type: "numberedList",
+    label: "Numbered list",
+    description: "Numbered steps or items, each with a heading and optional text.",
+    create: () => ({
+      type: "numberedList",
+      title: "How it works",
+      numberStyle: "circle",
+      columns: 1,
+      items: [{ heading: "First step", body: "" }],
+    }),
+  },
+  {
+    type: "iconList",
+    label: "Icon list",
+    description: "Items with a Lucide icon, label, and optional text.",
+    create: () => ({
+      type: "iconList",
+      title: "Why choose us",
+      columns: 2,
+      items: [{ icon: "CheckCircle2", label: "Benefit", body: "" }],
+    }),
+  },
+  {
+    type: "richTextColumns",
+    label: "Text columns",
+    description: "Two to four columns of text with an optional intro.",
+    create: () => ({
+      type: "richTextColumns",
+      heading: "",
+      dividers: false,
+      columns: [
+        { title: "", body: "Column one." },
+        { title: "", body: "Column two." },
+      ],
+    }),
+  },
+  {
+    type: "imageLeftTextRight",
+    label: "Image left, text right",
+    description: "Image on the left, heading and text on the right.",
+    create: () => ({
+      type: "imageLeftTextRight",
+      image: { url: "", alt: "" },
+      title: "Heading",
+      body: "Add your content here.",
+      imageWidthPercent: 50,
+    }),
+  },
+  {
+    type: "imageRightTextLeft",
+    label: "Image right, text left",
+    description: "Image on the right, heading and text on the left.",
+    create: () => ({
+      type: "imageRightTextLeft",
+      image: { url: "", alt: "" },
+      title: "Heading",
+      body: "Add your content here.",
+      imageWidthPercent: 50,
+    }),
+  },
+  {
+    type: "imageTitleBelow",
+    label: "Image with title below",
+    description: "A single image with a title and optional caption underneath.",
+    create: () => ({
+      type: "imageTitleBelow",
+      image: { url: "", alt: "" },
+      title: "Caption title",
+      aspectRatio: "16/9",
+      maxWidth: "lg",
+    }),
+  },
+  {
+    type: "imageTitleBeside",
+    label: "Image with title beside",
+    description: "Image on one side with a title and text beside it.",
+    create: () => ({
+      type: "imageTitleBeside",
+      image: { url: "", alt: "" },
+      imagePosition: "left",
+      title: "Heading",
+      body: "Add your content here.",
+      imageSize: "md",
+      verticalAlign: "top",
     }),
   },
 ];
