@@ -9,7 +9,7 @@ import {
 } from "@/lib/cms/blocks";
 import { savePage, publishPage } from "@/app/admin/pages/actions";
 import { StatusBadge } from "./StatusBadge";
-import type { ContentStatus } from "@prisma/client";
+import type { ContentStatus, PageTemplate } from "@prisma/client";
 import { RichTextEditor } from "./RichTextEditor";
 
 type PageData = {
@@ -21,6 +21,8 @@ type PageData = {
   seoDescription: string;
   canonicalUrl: string;
   ogImageUrl: string;
+  template: PageTemplate;
+  hasSidebar: boolean;
 };
 
 const input = "mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm focus:border-brand-dark";
@@ -37,6 +39,8 @@ export function PageEditor({
 }) {
   const [blocks, setBlocks] = useState<Block[]>(initialBlocks);
   const [title, setTitle] = useState(page.title);
+  const [template, setTemplate] = useState<PageTemplate>(page.template);
+  const [hasSidebar, setHasSidebar] = useState(page.hasSidebar);
 
   function update(i: number, patch: Partial<Block>) {
     setBlocks((b) => b.map((blk, idx) => (idx === i ? ({ ...blk, ...patch } as Block) : blk)));
@@ -62,6 +66,8 @@ export function PageEditor({
     <form className="space-y-6">
       <input type="hidden" name="pageId" value={page.id} />
       <input type="hidden" name="blocks" value={JSON.stringify(blocks)} />
+      <input type="hidden" name="template" value={template} />
+      <input type="hidden" name="hasSidebar" value={String(hasSidebar)} />
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
@@ -108,6 +114,25 @@ export function PageEditor({
           onChange={(e) => setTitle(e.target.value)}
           className={input}
         />
+      </div>
+
+      <div className="space-y-3 rounded-card border border-line bg-white p-4">
+        <Radio
+          label="Template"
+          value={template}
+          options={[
+            { value: "SERVICE_DETAIL", label: "Service Detail page" },
+            { value: "GENERAL", label: "General page" },
+          ]}
+          onChange={(v) => setTemplate(v as PageTemplate)}
+        />
+        {template === "GENERAL" && (
+          <Toggle
+            label="Show sidebar with contact CTAs and insurance information"
+            checked={hasSidebar}
+            onChange={setHasSidebar}
+          />
+        )}
       </div>
 
       {/* Blocks */}
@@ -294,4 +319,55 @@ function RichField({
       </div>
     </div>
   );
+}
+
+function Radio({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div>
+      <span className={labelCls}>{label}</span>
+      <div className="mt-1 flex flex-wrap gap-3">
+        {options.map((o) => (
+          <label key={o.value} className="flex items-center gap-1.5 text-sm text-ink">
+            <input type="radio" checked={value === o.value} onChange={() => onChange(o.value)} />
+            {o.label}
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Toggle({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <label className="flex items-center gap-2 text-sm text-ink">
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      {label}
+    </label>
+  );
+}
+
+function moved<T>(arr: T[], i: number, dir: -1 | 1): T[] {
+  const j = i + dir;
+  if (j < 0 || j >= arr.length) return arr;
+  const copy = [...arr];
+  [copy[i], copy[j]] = [copy[j], copy[i]];
+  return copy;
 }
