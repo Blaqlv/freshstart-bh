@@ -299,6 +299,70 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (patch: Part
           <p className="text-xs text-ink-soft">Content is pulled live from published {block.type === "testimonialCarousel" ? "testimonials" : block.type === "locationGrid" ? "locations" : "providers"}.</p>
         </>
       );
+    case "numberedList":
+      return (
+        <>
+          <Field label="Title" value={block.title ?? ""} onChange={(v) => onChange({ title: v } as Partial<Block>)} />
+          <RichField label="Intro" value={block.intro ?? ""} onChange={(v) => onChange({ intro: v } as Partial<Block>)} minimal />
+          <Radio
+            label="Number style"
+            value={block.numberStyle ?? "circle"}
+            options={[{ value: "circle", label: "Circle" }, { value: "square", label: "Square" }, { value: "plain", label: "Plain" }]}
+            onChange={(v) => onChange({ numberStyle: v } as Partial<Block>)}
+          />
+          <Radio
+            label="Columns"
+            value={String(block.columns ?? 1)}
+            options={[{ value: "1", label: "1 column" }, { value: "2", label: "2 columns" }]}
+            onChange={(v) => onChange({ columns: Number(v) } as Partial<Block>)}
+          />
+          {block.items.map((it, idx) => (
+            <div key={idx} className="space-y-2 rounded-lg border border-line p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-ink-soft">Item {idx + 1}</span>
+                <div className="flex gap-1">
+                  <button type="button" aria-label="Move item up" className="rounded p-1 hover:bg-surface-alt" onClick={() => onChange({ items: moved(block.items, idx, -1) } as Partial<Block>)}>↑</button>
+                  <button type="button" aria-label="Move item down" className="rounded p-1 hover:bg-surface-alt" onClick={() => onChange({ items: moved(block.items, idx, 1) } as Partial<Block>)}>↓</button>
+                  <button type="button" aria-label="Remove item" className="rounded p-1 text-accent hover:bg-surface-alt" onClick={() => onChange({ items: block.items.filter((_, k) => k !== idx) } as Partial<Block>)}>✕</button>
+                </div>
+              </div>
+              <Field label="Heading" value={it.heading} onChange={(v) => onChange({ items: block.items.map((x, k) => (k === idx ? { ...x, heading: v } : x)) } as Partial<Block>)} />
+              <RichField label="Description" value={it.body ?? ""} onChange={(v) => onChange({ items: block.items.map((x, k) => (k === idx ? { ...x, body: v } : x)) } as Partial<Block>)} minimal />
+            </div>
+          ))}
+          <button type="button" className="text-sm font-medium text-brand-dark" onClick={() => onChange({ items: [...block.items, { heading: "", body: "" }] } as Partial<Block>)}>+ Add item</button>
+        </>
+      );
+    case "iconList":
+      return (
+        <>
+          <Field label="Title" value={block.title ?? ""} onChange={(v) => onChange({ title: v } as Partial<Block>)} />
+          <RichField label="Intro" value={block.intro ?? ""} onChange={(v) => onChange({ intro: v } as Partial<Block>)} minimal />
+          <Field label="Icon colour (hex or token, optional)" value={block.iconColor ?? ""} onChange={(v) => onChange({ iconColor: v } as Partial<Block>)} />
+          <Radio
+            label="Columns"
+            value={String(block.columns ?? 1)}
+            options={[{ value: "1", label: "1" }, { value: "2", label: "2" }, { value: "3", label: "3" }]}
+            onChange={(v) => onChange({ columns: Number(v) } as Partial<Block>)}
+          />
+          {block.items.map((it, idx) => (
+            <div key={idx} className="space-y-2 rounded-lg border border-line p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-ink-soft">Item {idx + 1}</span>
+                <div className="flex gap-1">
+                  <button type="button" aria-label="Move item up" className="rounded p-1 hover:bg-surface-alt" onClick={() => onChange({ items: moved(block.items, idx, -1) } as Partial<Block>)}>↑</button>
+                  <button type="button" aria-label="Move item down" className="rounded p-1 hover:bg-surface-alt" onClick={() => onChange({ items: moved(block.items, idx, 1) } as Partial<Block>)}>↓</button>
+                  <button type="button" aria-label="Remove item" className="rounded p-1 text-accent hover:bg-surface-alt" onClick={() => onChange({ items: block.items.filter((_, k) => k !== idx) } as Partial<Block>)}>✕</button>
+                </div>
+              </div>
+              <Field label="Icon (Lucide name, e.g. CheckCircle2)" value={it.icon} onChange={(v) => onChange({ items: block.items.map((x, k) => (k === idx ? { ...x, icon: v } : x)) } as Partial<Block>)} />
+              <Field label="Label" value={it.label} onChange={(v) => onChange({ items: block.items.map((x, k) => (k === idx ? { ...x, label: v } : x)) } as Partial<Block>)} />
+              <RichField label="Description" value={it.body ?? ""} onChange={(v) => onChange({ items: block.items.map((x, k) => (k === idx ? { ...x, body: v } : x)) } as Partial<Block>)} minimal />
+            </div>
+          ))}
+          <button type="button" className="text-sm font-medium text-brand-dark" onClick={() => onChange({ items: [...block.items, { icon: "CheckCircle2", label: "", body: "" }] } as Partial<Block>)}>+ Add item</button>
+        </>
+      );
     default:
       return null;
   }
