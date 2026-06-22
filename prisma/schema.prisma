@@ -31,6 +31,11 @@ enum ContentStatus {
   ARCHIVED
 }
 
+enum PageTemplate {
+  SERVICE_DETAIL
+  GENERAL
+}
+
 model User {
   id           String    @id @default(cuid())
   email        String    @unique
@@ -66,6 +71,8 @@ model Page {
   seoDescription   String?
   canonicalUrl     String?
   ogImageUrl       String?
+  template         PageTemplate  @default(GENERAL)
+  hasSidebar       Boolean       @default(false) // GENERAL only; SERVICE_DETAIL renders the sidebar regardless
   // Pointer to the version currently shown to the public
   publishedVersion Int?
   createdAt        DateTime      @default(now())
