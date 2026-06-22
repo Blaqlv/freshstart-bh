@@ -6,12 +6,12 @@ import type { Editor as TinyMCEEditor } from "tinymce";
 const FULL_TOOLBAR =
   "undo redo | styles | bold italic underline strikethrough | " +
   "alignleft aligncenter alignright | bullist numlist outdent indent | " +
-  "link | forecolor backcolor removeformat | code fullscreen";
+  "link image | forecolor backcolor removeformat | code fullscreen";
 
 const MINIMAL_TOOLBAR = "bold italic underline | link | bullist numlist";
 
 const FULL_PLUGINS = [
-  "advlist", "autolink", "lists", "link", "charmap",
+  "advlist", "autolink", "lists", "link", "image", "charmap",
   "searchreplace", "visualblocks", "code", "fullscreen", "wordcount",
 ];
 
@@ -46,6 +46,14 @@ export function RichTextEditor({
         content_style:
           "body{font-family:inherit;font-size:16px;line-height:1.6;color:#1a1a1a;padding:12px}" +
           "p{margin:0 0 1em}a{color:#1f3a5f}",
+        images_upload_handler: async (blobInfo) => {
+          const fd = new FormData();
+          fd.append("file", blobInfo.blob(), blobInfo.filename());
+          const res = await fetch("/api/admin/media/upload", { method: "POST", body: fd });
+          if (!res.ok) throw new Error("Upload failed");
+          const data = await res.json();
+          return data.url as string;
+        },
         setup: (editor: TinyMCEEditor) => {
           // Label the editor's iframe for assistive tech.
           editor.on("init", () => {
