@@ -224,7 +224,6 @@ export const primaryNav = [
       { label: "Crisis Resources", href: "/resources/crisis-resources" },
     ],
   },
-  { label: "Reviews", href: "/reviews" },
   { label: "Contact", href: "/contact" },
 ] as const;
 
@@ -236,6 +235,9 @@ export const footerNav = [
   { label: "Resources", href: "/resources" },
   { label: "Careers", href: "/careers" },
   { label: "Contact", href: "/contact" },
+  // Reviews moved here from the top nav (Prompt 4, Change A).
+  { label: "Patient Reviews", href: "/reviews" },
+  { label: "Leave a Review", href: "/reviews/leave-a-review" },
   { label: "Privacy Policy", href: "/privacy/privacy-policy" },
   { label: "Notice of Privacy Practices", href: "/privacy/notice-of-privacy-practices" },
   { label: "Accessibility Statement", href: "/accessibility" },
