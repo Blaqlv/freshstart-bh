@@ -129,7 +129,7 @@ export type ImageTitleBesideBlock = {
   verticalAlign?: "top" | "center";
 };
 
-export type Block =
+export type Block = (
   | HeroBlock
   | RichTextBlock
   | FaqAccordionBlock
@@ -144,7 +144,8 @@ export type Block =
   | ImageLeftTextRightBlock
   | ImageRightTextLeftBlock
   | ImageTitleBelowBlock
-  | ImageTitleBesideBlock;
+  | ImageTitleBesideBlock
+) & { isVisible?: boolean };
 
 type BlockMeta = {
   type: BlockType;

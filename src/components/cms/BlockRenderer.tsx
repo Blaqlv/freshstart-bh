@@ -15,9 +15,11 @@ import { RichBody } from "./blocks/RichBody";
 export async function BlockRenderer({ blocks }: { blocks: Block[] }) {
   return (
     <>
-      {blocks.map((block, i) => (
-        <BlockView key={i} block={block} />
-      ))}
+      {blocks
+        .filter((block) => block.isVisible !== false)
+        .map((block, i) => (
+          <BlockView key={i} block={block} />
+        ))}
     </>
   );
 }

@@ -70,6 +70,9 @@ async function persistDraft(formData: FormData, pageId: string) {
         seoDescription: (String(formData.get("seoDescription") ?? "") || null) as string | null,
         canonicalUrl: (String(formData.get("canonicalUrl") ?? "") || null) as string | null,
         ogImageUrl: (String(formData.get("ogImageUrl") ?? "") || null) as string | null,
+        template:
+          String(formData.get("template")) === "SERVICE_DETAIL" ? "SERVICE_DETAIL" : "GENERAL",
+        hasSidebar: String(formData.get("hasSidebar")) === "true",
       },
     }),
     db.pageVersion.update({ where: { id: draft.id }, data: { blocks: blocks as object } }),

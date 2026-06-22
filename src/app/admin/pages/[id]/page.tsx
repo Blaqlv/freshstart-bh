@@ -37,6 +37,8 @@ export default async function EditPage({ params }: { params: Promise<{ id: strin
           seoDescription: page.seoDescription ?? "",
           canonicalUrl: page.canonicalUrl ?? "",
           ogImageUrl: page.ogImageUrl ?? "",
+          template: page.template,
+          hasSidebar: page.hasSidebar,
         }}
         initialBlocks={blocks}
         canPublish={canPublish}
