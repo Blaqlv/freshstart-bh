@@ -21,14 +21,8 @@ export default async function ProvidersIndex() {
     <>
       <section className="bg-brand-dark text-white">
         <Container className="py-14">
-          <nav aria-label="Breadcrumb" className="text-sm text-white/70">
-            <ol className="flex gap-2">
-              <li><Link href="/" className="hover:underline">Home</Link></li>
-              <li aria-hidden>/</li>
-              <li aria-current="page" className="text-white">Providers</li>
-            </ol>
-          </nav>
-          <h1 className="mt-4 text-4xl font-bold sm:text-5xl">Our Providers</h1>
+          {/* Breadcrumbs removed per design update - Prompt 4. Do not restore without explicit instruction. */}
+          <h1 className="text-4xl font-bold sm:text-5xl">Our Providers</h1>
           <p className="mt-4 max-w-2xl text-lg text-white/85">
             Seasoned behavioral health professionals who bring experience, compassion, and respect
             to every patient.

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { Container } from "@/components/ui/Container";
@@ -36,17 +35,8 @@ export default async function LocationDetail({ params }: { params: Promise<{ slu
 
   return (
     <Container className="py-16">
-      <nav aria-label="Breadcrumb" className="text-sm text-ink-soft">
-        <ol className="flex flex-wrap gap-2">
-          <li><Link href="/" className="hover:underline">Home</Link></li>
-          <li aria-hidden>/</li>
-          <li><Link href="/locations" className="hover:underline">Locations</Link></li>
-          <li aria-hidden>/</li>
-          <li aria-current="page" className="text-ink">{loc.name}</li>
-        </ol>
-      </nav>
-
-      <div className="mt-6 grid gap-10 lg:grid-cols-2">
+      {/* Breadcrumbs removed per design update - Prompt 4. Do not restore without explicit instruction. */}
+      <div className="grid gap-10 lg:grid-cols-2">
         <div>
           <h1 className="text-3xl font-bold text-brand-dark">{loc.name}</h1>
           {loc.blurb && <p className="mt-3 text-ink-soft">{loc.blurb}</p>}
