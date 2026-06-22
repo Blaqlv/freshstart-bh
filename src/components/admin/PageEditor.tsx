@@ -11,6 +11,8 @@ import { savePage, publishPage } from "@/app/admin/pages/actions";
 import { StatusBadge } from "./StatusBadge";
 import type { ContentStatus, PageTemplate } from "@prisma/client";
 import { RichTextEditor } from "./RichTextEditor";
+import { MediaPicker } from "./MediaPicker";
+import { IconPicker } from "./IconPicker";
 
 type PageData = {
   id: string;
@@ -355,7 +357,7 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (patch: Part
                   <button type="button" aria-label="Remove item" className="rounded p-1 text-accent hover:bg-surface-alt" onClick={() => onChange({ items: block.items.filter((_, k) => k !== idx) } as Partial<Block>)}>✕</button>
                 </div>
               </div>
-              <Field label="Icon (Lucide name, e.g. CheckCircle2)" value={it.icon} onChange={(v) => onChange({ items: block.items.map((x, k) => (k === idx ? { ...x, icon: v } : x)) } as Partial<Block>)} />
+              <IconField label="Icon" value={it.icon} onChange={(v) => onChange({ items: block.items.map((x, k) => (k === idx ? { ...x, icon: v } : x)) } as Partial<Block>)} />
               <Field label="Label" value={it.label} onChange={(v) => onChange({ items: block.items.map((x, k) => (k === idx ? { ...x, label: v } : x)) } as Partial<Block>)} />
               <RichField label="Description" value={it.body ?? ""} onChange={(v) => onChange({ items: block.items.map((x, k) => (k === idx ? { ...x, body: v } : x)) } as Partial<Block>)} minimal />
             </div>
@@ -390,7 +392,7 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (patch: Part
     case "imageRightTextLeft":
       return (
         <>
-          <Field label="Image URL" value={block.image.url} onChange={(v) => onChange({ image: { ...block.image, url: v } } as Partial<Block>)} />
+          <ImageField label="Image" value={block.image.url} onChange={(v) => onChange({ image: { ...block.image, url: v } } as Partial<Block>)} />
           <Field label="Image alt text" value={block.image.alt} onChange={(v) => onChange({ image: { ...block.image, alt: v } } as Partial<Block>)} />
           <Radio
             label="Image width"
@@ -409,7 +411,7 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (patch: Part
     case "imageTitleBelow":
       return (
         <>
-          <Field label="Image URL" value={block.image.url} onChange={(v) => onChange({ image: { ...block.image, url: v } } as Partial<Block>)} />
+          <ImageField label="Image" value={block.image.url} onChange={(v) => onChange({ image: { ...block.image, url: v } } as Partial<Block>)} />
           <Field label="Image alt text" value={block.image.alt} onChange={(v) => onChange({ image: { ...block.image, alt: v } } as Partial<Block>)} />
           <Radio
             label="Aspect ratio"
@@ -430,7 +432,7 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (patch: Part
     case "imageTitleBeside":
       return (
         <>
-          <Field label="Image URL" value={block.image.url} onChange={(v) => onChange({ image: { ...block.image, url: v } } as Partial<Block>)} />
+          <ImageField label="Image" value={block.image.url} onChange={(v) => onChange({ image: { ...block.image, url: v } } as Partial<Block>)} />
           <Field label="Image alt text" value={block.image.alt} onChange={(v) => onChange({ image: { ...block.image, alt: v } } as Partial<Block>)} />
           <Radio
             label="Image position"
@@ -534,6 +536,44 @@ function Toggle({
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
       {label}
     </label>
+  );
+}
+
+function ImageField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div>
+      <span className={labelCls}>{label}</span>
+      <div className="mt-1">
+        <MediaPicker value={value} onChange={onChange} />
+      </div>
+    </div>
+  );
+}
+
+function IconField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div>
+      <span className={labelCls}>{label}</span>
+      <div className="mt-1">
+        <IconPicker value={value} onChange={onChange} />
+      </div>
+    </div>
   );
 }
 
