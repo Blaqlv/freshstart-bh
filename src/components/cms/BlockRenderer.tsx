@@ -3,6 +3,12 @@ import { db } from "@/lib/db";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import type { Block } from "@/lib/cms/blocks";
+import { NumberedListBlock } from "./blocks/NumberedListBlock";
+import { IconListBlock } from "./blocks/IconListBlock";
+import { RichTextColumnsBlock } from "./blocks/RichTextColumnsBlock";
+import { ImageTextSplitBlock } from "./blocks/ImageTextSplitBlock";
+import { ImageTitleBelowBlock } from "./blocks/ImageTitleBelowBlock";
+import { ImageTitleBesideBlock } from "./blocks/ImageTitleBesideBlock";
 
 /** Renders an ordered list of CMS blocks. Server component (queries live data). */
 export async function BlockRenderer({ blocks }: { blocks: Block[] }) {
@@ -179,6 +185,27 @@ async function BlockView({ block }: { block: Block }) {
         </section>
       );
     }
+
+    case "numberedList":
+      return <NumberedListBlock block={block} />;
+
+    case "iconList":
+      return <IconListBlock block={block} />;
+
+    case "richTextColumns":
+      return <RichTextColumnsBlock block={block} />;
+
+    case "imageLeftTextRight":
+      return <ImageTextSplitBlock block={block} imageSide="left" />;
+
+    case "imageRightTextLeft":
+      return <ImageTextSplitBlock block={block} imageSide="right" />;
+
+    case "imageTitleBelow":
+      return <ImageTitleBelowBlock block={block} />;
+
+    case "imageTitleBeside":
+      return <ImageTitleBesideBlock block={block} />;
 
     default:
       return null;
