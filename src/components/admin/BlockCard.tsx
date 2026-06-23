@@ -9,21 +9,17 @@ import { type Block, blockLabel, blockPreview } from "@/lib/cms/blocks";
 export function BlockCard({
   id,
   block,
-  expanded,
-  onToggleExpand,
+  onEdit,
   onDuplicate,
   onToggleVisible,
   onDelete,
-  children,
 }: {
   id: string;
   block: Block;
-  expanded: boolean;
-  onToggleExpand: () => void;
+  onEdit: () => void;
   onDuplicate: () => void;
   onToggleVisible: () => void;
   onDelete: () => void;
-  children: React.ReactNode;
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -70,13 +66,7 @@ export function BlockCard({
         </div>
 
         <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={onToggleExpand}
-            aria-label={expanded ? "Collapse block" : "Edit block"}
-            aria-expanded={expanded}
-            className={iconBtn}
-          >
+          <button type="button" onClick={onEdit} aria-label="Edit block" className={iconBtn}>
             <Pencil className="h-4 w-4" />
           </button>
           <button type="button" onClick={onDuplicate} aria-label="Duplicate block" className={iconBtn}>
@@ -125,8 +115,6 @@ export function BlockCard({
           </span>
         </div>
       )}
-
-      {expanded && <div className="space-y-3 border-t border-line p-4">{children}</div>}
     </div>
   );
 }
