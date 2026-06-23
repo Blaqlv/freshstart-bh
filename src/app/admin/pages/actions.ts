@@ -92,6 +92,18 @@ export async function savePage(formData: FormData) {
   revalidatePath("/admin/pages");
 }
 
+export async function autosavePage(formData: FormData): Promise<{ savedAt: string }> {
+  const session = await requireCapability("content:write");
+  const pageId = String(formData.get("pageId"));
+  const { draft, blockCount } = await persistDraft(formData, pageId);
+  await audit({ sub: session.sub, email: session.email }, "page.autosave", "Page", pageId, {
+    version: draft.version,
+    blocks: blockCount,
+  });
+  revalidatePath(`/admin/pages/${pageId}`);
+  return { savedAt: new Date().toISOString() };
+}
+
 export async function publishPage(formData: FormData) {
   const session = await requireCapability("content:publish");
   const pageId = String(formData.get("pageId"));
