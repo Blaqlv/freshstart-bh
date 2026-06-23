@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   DndContext,
   closestCenter,
@@ -22,8 +22,9 @@ import {
   type BlockType,
   blockRegistry,
 } from "@/lib/cms/blocks";
-import { savePage, publishPage } from "@/app/admin/pages/actions";
+import { savePage, publishPage, autosavePage } from "@/app/admin/pages/actions";
 import { StatusBadge } from "./StatusBadge";
+import { SaveStatus } from "./SaveStatus";
 import type { ContentStatus, PageTemplate } from "@prisma/client";
 import { Radio, Toggle } from "./BlockFields";
 import { BlockCard } from "./BlockCard";
@@ -73,6 +74,12 @@ export function PageEditor({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [insertAt, setInsertAt] = useState<number | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const dirtyRef = useRef(false);
+  const savingRef = useRef(false);
+  const firstRender = useRef(true);
+  const [saving, setSaving] = useState(false);
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -139,10 +146,45 @@ export function PageEditor({
       );
     }
     setEditingId(null);
+    dirtyRef.current = true;
+    setTimeout(() => {
+      void autosave();
+    }, 0);
   }
 
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    dirtyRef.current = true;
+  }, [items, title, template, hasSidebar]);
+
+  const autosave = useCallback(async () => {
+    if (savingRef.current || !dirtyRef.current || !formRef.current) return;
+    savingRef.current = true;
+    setSaving(true);
+    try {
+      const res = await autosavePage(new FormData(formRef.current));
+      dirtyRef.current = false;
+      setSavedAt(new Date(res.savedAt));
+    } catch (err) {
+      console.warn("Autosave failed", err);
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      void autosave();
+    }, 30000);
+    return () => clearInterval(timer);
+  }, [autosave]);
+
   return (
-    <form className="space-y-6">
+    <form ref={formRef} className="space-y-6">
       <input type="hidden" name="pageId" value={page.id} />
       <input type="hidden" name="blocks" value={JSON.stringify(items.map((it) => it.block))} />
       <input type="hidden" name="template" value={template} />
@@ -156,7 +198,8 @@ export function PageEditor({
           </div>
           <p className="text-sm text-ink-soft">/{page.slug}</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <SaveStatus saving={saving} savedAt={savedAt} />
           <a
             href={`/admin/pages/${page.id}/preview`}
             target="_blank"
