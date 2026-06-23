@@ -12,7 +12,7 @@ const rubik = Rubik({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://freshstartbhinc.com"),
+  metadataBase: new URL(site.url),
   title: {
     default: "Fresh Start Behavioral Health | Dayton & Cincinnati, OH",
     template: "%s | Fresh Start Behavioral Health",

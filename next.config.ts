@@ -31,26 +31,34 @@ const legacyRedirects = [
   { source: "/schedule-appointment", destination: "/contact#appointment" },
 ];
 
-// Canonical production host (derived from NEXT_PUBLIC_SITE_URL). Anything served
-// on a different host — preview deploys, *.vercel.app — gets a noindex header so
-// only the real domain is indexed.
-const PROD_HOST = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://freshstartbhinc.com")
-  .replace(/^https?:\/\//, "")
+// Canonical production host, once a real domain is configured via
+// NEXT_PUBLIC_SITE_URL. Every other host (preview deploys, *.vercel.app) gets a
+// noindex header. Until a domain is set the site is pre-launch, so every host —
+// including the live Vercel URL — is noindexed.
+const PROD_HOST = process.env.NEXT_PUBLIC_SITE_URL
+  ?.replace(/^https?:\/\//, "")
   .replace(/\/.*$/, "");
-const PROD_HOST_RE = `(www\\.)?${PROD_HOST.replace(/\./g, "\\.")}`;
+const PROD_HOST_RE = PROD_HOST ? `(www\\.)?${PROD_HOST.replace(/\./g, "\\.")}` : null;
 
 const nextConfig: NextConfig = {
   async redirects() {
     return legacyRedirects.map((r) => ({ ...r, permanent: true }));
   },
   async headers() {
+    const noindex = { key: "X-Robots-Tag", value: "noindex, nofollow" };
     return [
-      {
-        // Applies when the request host is NOT the production domain.
-        source: "/:path*",
-        missing: [{ type: "host", value: PROD_HOST_RE }],
-        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
-      },
+      PROD_HOST_RE
+        ? {
+            // A real domain is set: noindex every host except it.
+            source: "/:path*",
+            missing: [{ type: "host", value: PROD_HOST_RE }],
+            headers: [noindex],
+          }
+        : {
+            // Pre-launch: no canonical domain yet, noindex the whole site.
+            source: "/:path*",
+            headers: [noindex],
+          },
     ];
   },
 };
