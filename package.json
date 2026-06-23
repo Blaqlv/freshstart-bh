@@ -2,9 +2,12 @@
   "name": "freshstart-bh",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "postinstall": "prisma generate && node scripts/copy-tinymce.mjs",
     "lint": "eslint",
@@ -26,7 +29,6 @@
     "@prisma/client": "^6.19.3",
     "@tinymce/tinymce-react": "^6.3.0",
     "bcryptjs": "^3.0.3",
-    "isomorphic-dompurify": "^3.18.0",
     "jose": "^6.2.3",
     "lucide-react": "^1.21.0",
     "next": "16.2.9",
@@ -35,6 +37,7 @@
     "qrcode": "^1.5.4",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "sanitize-html": "^2.17.5",
     "tinymce": "^8.6.0",
     "zod": "^4.4.3"
   },
@@ -48,6 +51,7 @@
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/sanitize-html": "^2.16.1",
     "axe-core": "^4.12.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",

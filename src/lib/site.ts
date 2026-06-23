@@ -10,8 +10,14 @@
 export const site = {
   name: "Fresh Start Behavioral Health, Inc.",
   shortName: "Fresh Start Behavioral Health",
-  // Canonical production origin (override per-env with NEXT_PUBLIC_SITE_URL).
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://freshstartbhinc.com",
+  // Canonical origin. Set NEXT_PUBLIC_SITE_URL once a real domain is live; until
+  // then fall back to the current Vercel deployment URL (or localhost in dev) so
+  // canonical/OG/sitemap URLs stay self-consistent and reference no other domain.
+  url:
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : "http://localhost:3000"),
   tagline: "Everyone Deserves a Fresh Start",
   phone: "937-579-0073",
   phoneHref: "tel:+19375790073",
