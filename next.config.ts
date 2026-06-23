@@ -40,6 +40,11 @@ const PROD_HOST = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://freshstartbhinc.
 const PROD_HOST_RE = `(www\\.)?${PROD_HOST.replace(/\./g, "\\.")}`;
 
 const nextConfig: NextConfig = {
+  // isomorphic-dompurify pulls in jsdom; when Next bundles it into the server
+  // output, a require() in that dependency chain resolves to an ESM file and
+  // throws ERR_REQUIRE_ESM at runtime on Vercel (every CMS block-rendering page
+  // 500s). Keeping it external makes Node load its CommonJS build at runtime.
+  serverExternalPackages: ["isomorphic-dompurify"],
   async redirects() {
     return legacyRedirects.map((r) => ({ ...r, permanent: true }));
   },
