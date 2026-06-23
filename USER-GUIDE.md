@@ -27,10 +27,12 @@ Each area has its own separate login. Bookmark the ones you use.
 
 | Area | Web address |
 |---|---|
-| Admin Portal | `https://freshstartbhinc.com/admin/login` |
-| Analytics Dashboard | `https://freshstartbhinc.com/dashboard` |
-| Patient Portal | `https://freshstartbhinc.com/patient-portal/login` |
-| Intake (new patients) | `https://freshstartbhinc.com/intake` |
+| Admin Portal | `https://freshstart-bh.vercel.app/admin/login` |
+| Analytics Dashboard | `https://freshstart-bh.vercel.app/dashboard` |
+| Patient Portal | `https://freshstart-bh.vercel.app/patient-portal/login` |
+| Intake (new patients) | `https://freshstart-bh.vercel.app/intake` |
+
+_(Replace the address above with your own domain once it goes live.)_
 
 **Two-step login (MFA).** Staff and patient logins use an extra security code from an authenticator app (Google Authenticator, Authy, Microsoft Authenticator, etc.). On your first login you'll be shown a QR code to scan once; after that the app generates a fresh 6-digit code each time. Keep your phone handy when you sign in.
 

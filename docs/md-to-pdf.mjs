@@ -68,7 +68,6 @@ const html = `<!doctype html><html lang="en"><head><meta charset="utf-8">
     <p class="tagline">Your new website and staff platform &mdash; a plain-language guide for the people who run it day to day.</p>
     <div class="meta">
       Prepared ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
-      &nbsp;&middot;&nbsp; freshstartbhinc.com
       <div class="confidential">Confidential &mdash; for Fresh Start Behavioral Health</div>
     </div>
   </section>
