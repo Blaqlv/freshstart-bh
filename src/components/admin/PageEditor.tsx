@@ -184,7 +184,13 @@ export function PageEditor({
   }, [autosave]);
 
   return (
-    <form ref={formRef} className="space-y-6">
+    <form
+      ref={formRef}
+      className="space-y-6"
+      onInput={() => {
+        dirtyRef.current = true;
+      }}
+    >
       <input type="hidden" name="pageId" value={page.id} />
       <input type="hidden" name="blocks" value={JSON.stringify(items.map((it) => it.block))} />
       <input type="hidden" name="template" value={template} />
