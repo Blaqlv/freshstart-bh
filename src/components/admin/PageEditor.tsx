@@ -25,8 +25,9 @@ import {
 import { savePage, publishPage } from "@/app/admin/pages/actions";
 import { StatusBadge } from "./StatusBadge";
 import type { ContentStatus, PageTemplate } from "@prisma/client";
-import { BlockFields, Radio, Toggle } from "./BlockFields";
+import { Radio, Toggle } from "./BlockFields";
 import { BlockCard } from "./BlockCard";
+import { BlockEditorPanel } from "./BlockEditorPanel";
 import { BlockPicker } from "./BlockPicker";
 
 type PageData = {
@@ -69,7 +70,7 @@ export function PageEditor({
   const [title, setTitle] = useState(page.title);
   const [template, setTemplate] = useState<PageTemplate>(page.template);
   const [hasSidebar, setHasSidebar] = useState(page.hasSidebar);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [insertAt, setInsertAt] = useState<number | null>(null);
 
@@ -78,14 +79,9 @@ export function PageEditor({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  function updateBlock(id: string, patch: Partial<Block>) {
-    setItems((arr) =>
-      arr.map((it) => (it.id === id ? { ...it, block: { ...it.block, ...patch } as Block } : it)),
-    );
-  }
   function removeBlock(id: string) {
     setItems((arr) => arr.filter((it) => it.id !== id));
-    setExpandedId((cur) => (cur === id ? null : cur));
+    setEditingId((cur) => (cur === id ? null : cur));
   }
   function duplicateBlock(id: string) {
     setItems((arr) => {
@@ -130,9 +126,19 @@ export function PageEditor({
       const at = insertAt ?? arr.length;
       return [...arr.slice(0, at), item, ...arr.slice(at)];
     });
-    setExpandedId(item.id);
+    setEditingId(item.id);
     setPickerOpen(false);
     setInsertAt(null);
+  }
+
+  const cancelEdit = useCallback(() => setEditingId(null), []);
+  function saveBlock(updated: Block) {
+    if (editingId) {
+      setItems((arr) =>
+        arr.map((it) => (it.id === editingId ? { ...it, block: updated } : it)),
+      );
+    }
+    setEditingId(null);
   }
 
   return (
@@ -248,16 +254,11 @@ export function PageEditor({
                     <BlockCard
                       id={it.id}
                       block={it.block}
-                      expanded={expandedId === it.id}
-                      onToggleExpand={() =>
-                        setExpandedId((cur) => (cur === it.id ? null : it.id))
-                      }
+                      onEdit={() => setEditingId(it.id)}
                       onDuplicate={() => duplicateBlock(it.id)}
                       onToggleVisible={() => toggleVisible(it.id)}
                       onDelete={() => removeBlock(it.id)}
-                    >
-                      <BlockFields block={it.block} onChange={(patch) => updateBlock(it.id, patch)} />
-                    </BlockCard>
+                    />
                   </div>
                 ))}
               </SortableContext>
@@ -280,6 +281,19 @@ export function PageEditor({
         onPick={handlePick}
         onClose={closePicker}
       />
+
+      {editingId &&
+        (() => {
+          const editingItem = items.find((it) => it.id === editingId);
+          return editingItem ? (
+            <BlockEditorPanel
+              key={editingItem.id}
+              block={editingItem.block}
+              onSave={saveBlock}
+              onCancel={cancelEdit}
+            />
+          ) : null;
+        })()}
 
       {/* SEO */}
       <details className="rounded-card border border-line bg-white p-4">
