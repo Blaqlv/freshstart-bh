@@ -142,6 +142,11 @@ EOF
 
 **Files:** Create `src/lib/sanitize.ts`
 
+> **Superseded 2026-06-23:** this plan executed with `isomorphic-dompurify` (recorded
+> below as-built), but it was later swapped to `sanitize-html` because jsdom broke the
+> Vercel serverless bundle. See the design spec's Sanitization section for the current
+> implementation and rationale.
+
 - [ ] **Step 1: Write the sanitizer**
 
 ```ts

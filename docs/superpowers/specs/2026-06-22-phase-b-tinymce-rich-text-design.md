@@ -42,7 +42,8 @@ plain-text content keeps rendering correctly with no migration.
 ## Scope
 
 ### In scope
-1. Add deps: `tinymce`, `@tinymce/tinymce-react`, `isomorphic-dompurify`.
+1. Add deps: `tinymce`, `@tinymce/tinymce-react`, `sanitize-html` (originally
+   `isomorphic-dompurify` — see the 2026-06-23 update under Sanitization).
 2. Self-host TinyMCE assets into `public/tinymce` via a cross-platform Node copy script
    chained into `postinstall`; gitignore the vendored copy.
 3. `src/lib/sanitize.ts` — `sanitizeHtml()`.
@@ -63,9 +64,12 @@ plain-text content keeps rendering correctly with no migration.
 
 ### 1. Dependencies & self-hosting
 
-Install `tinymce`, `@tinymce/tinymce-react`, `isomorphic-dompurify`. Do **not** add
-`@types/dompurify` — `isomorphic-dompurify` bundles its own types and a separate
-`@types/dompurify` can conflict.
+Install `tinymce`, `@tinymce/tinymce-react`, and `sanitize-html` (+ `@types/sanitize-html`).
+
+> **2026-06-23:** originally `isomorphic-dompurify`; swapped to `sanitize-html` after it
+> broke the production serverless bundle (see the Sanitization section). If reviving the
+> DOMPurify approach, do **not** add `@types/dompurify` — isomorphic-dompurify bundles its
+> own types and a separate `@types/dompurify` can conflict.
 
 **No `next.config.ts` change.** Self-hosted TinyMCE loads its core at runtime via
 `tinymceScriptSrc="/tinymce/tinymce.min.js"` served from `public/`. Only the small
@@ -81,16 +85,31 @@ missing (logs a warning, exits 0) so installs never break.
 
 ### 2. Sanitization (`src/lib/sanitize.ts`)
 
+> **Update (2026-06-23):** the original `isomorphic-dompurify` implementation was
+> replaced with `sanitize-html`. isomorphic-dompurify pulls in jsdom, and a
+> synchronous `require()` deep in jsdom's tree resolved to an ESM file in Vercel's
+> serverless bundle (`ERR_REQUIRE_ESM`), 500-ing every CMS page in production.
+> `sanitize-html` is pure JS (no jsdom/DOM), serverless-safe, and keeps the same
+> tag/attribute allowlist. See `vercel-jsdom-err-require-esm` memory.
+
 ```ts
-import DOMPurify from "isomorphic-dompurify";
+import sanitizeHtmlLib from "sanitize-html";
 
 export function sanitizeHtml(dirty: string): string {
-  return DOMPurify.sanitize(dirty, {
-    ALLOWED_TAGS: [
+  return sanitizeHtmlLib(dirty, {
+    allowedTags: [
       "p", "br", "strong", "em", "u", "s", "a", "ul", "ol", "li",
       "h2", "h3", "h4", "blockquote", "pre", "code", "span", "div", "hr", "img",
     ],
-    ALLOWED_ATTR: ["href", "target", "rel", "class", "src", "alt", "width", "height"],
+    allowedAttributes: {
+      a: ["href", "target", "rel", "class"],
+      img: ["src", "alt", "width", "height", "class"],
+      "*": ["class"],
+    },
+    allowedSchemes: ["http", "https", "mailto", "tel"],
+    allowedSchemesByTag: { img: ["http", "https", "data"] },
+    disallowedTagsMode: "discard",
+    nonTextTags: ["script", "style", "textarea", "option", "noscript"],
   });
 }
 ```
@@ -157,7 +176,7 @@ feeds the same `update(i, patch)` flow; blocks continue to serialize to the hidd
 
 ## Acceptance criteria
 
-- [ ] `tinymce`, `@tinymce/tinymce-react`, `isomorphic-dompurify` installed.
+- [ ] `tinymce`, `@tinymce/tinymce-react`, `sanitize-html` installed.
 - [ ] `postinstall` copies TinyMCE to `public/tinymce` cross-platform; `public/tinymce`
       gitignored.
 - [ ] `sanitizeHtml()` strips disallowed tags/attrs.
