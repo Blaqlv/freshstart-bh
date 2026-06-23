@@ -21,6 +21,15 @@ export type BlockType =
   | "imageTitleBelow"
   | "imageTitleBeside";
 
+export type BlockCategory = "text" | "images" | "layout" | "dynamic";
+
+export const blockCategories: { id: BlockCategory; label: string }[] = [
+  { id: "text", label: "Text & Content" },
+  { id: "images", label: "Images" },
+  { id: "layout", label: "Layout & Navigation" },
+  { id: "dynamic", label: "Dynamic Content" },
+];
+
 export type HeroBlock = {
   type: "hero";
   eyebrow?: string;
@@ -151,6 +160,7 @@ type BlockMeta = {
   type: BlockType;
   label: string;
   description: string;
+  category: BlockCategory;
   create: () => Block;
 };
 
@@ -159,18 +169,21 @@ export const blockRegistry: BlockMeta[] = [
     type: "hero",
     label: "Hero",
     description: "Large heading with optional eyebrow, body, and a call to action.",
+    category: "layout",
     create: () => ({ type: "hero", heading: "New hero heading", body: "" }),
   },
   {
     type: "richText",
     label: "Rich text",
     description: "A heading and body paragraphs.",
+    category: "text",
     create: () => ({ type: "richText", heading: "", body: "Add your content here." }),
   },
   {
     type: "faqAccordion",
     label: "FAQ accordion",
     description: "Expandable question / answer list.",
+    category: "layout",
     create: () => ({
       type: "faqAccordion",
       heading: "Frequently asked questions",
@@ -181,30 +194,35 @@ export const blockRegistry: BlockMeta[] = [
     type: "serviceGrid",
     label: "Service grid",
     description: "Grid of service cards (all published, or a chosen set).",
+    category: "dynamic",
     create: () => ({ type: "serviceGrid", heading: "Our services" }),
   },
   {
     type: "testimonialCarousel",
     label: "Testimonials",
     description: "Published patient testimonials.",
+    category: "dynamic",
     create: () => ({ type: "testimonialCarousel", heading: "Our reviews" }),
   },
   {
     type: "locationGrid",
     label: "Locations",
     description: "Grid of office locations.",
+    category: "dynamic",
     create: () => ({ type: "locationGrid", heading: "Our locations" }),
   },
   {
     type: "teamGrid",
     label: "Team grid",
     description: "Grid of provider profiles.",
+    category: "dynamic",
     create: () => ({ type: "teamGrid", heading: "Our team" }),
   },
   {
     type: "ctaBanner",
     label: "CTA banner",
     description: "Full-width call-to-action band.",
+    category: "layout",
     create: () => ({
       type: "ctaBanner",
       heading: "Ready to get started?",
@@ -216,6 +234,7 @@ export const blockRegistry: BlockMeta[] = [
     type: "numberedList",
     label: "Numbered list",
     description: "Numbered steps or items, each with a heading and optional text.",
+    category: "text",
     create: () => ({
       type: "numberedList",
       title: "How it works",
@@ -228,6 +247,7 @@ export const blockRegistry: BlockMeta[] = [
     type: "iconList",
     label: "Icon list",
     description: "Items with a Lucide icon, label, and optional text.",
+    category: "text",
     create: () => ({
       type: "iconList",
       title: "Why choose us",
@@ -239,6 +259,7 @@ export const blockRegistry: BlockMeta[] = [
     type: "richTextColumns",
     label: "Text columns",
     description: "Two to four columns of text with an optional intro.",
+    category: "text",
     create: () => ({
       type: "richTextColumns",
       heading: "",
@@ -253,6 +274,7 @@ export const blockRegistry: BlockMeta[] = [
     type: "imageLeftTextRight",
     label: "Image left, text right",
     description: "Image on the left, heading and text on the right.",
+    category: "images",
     create: () => ({
       type: "imageLeftTextRight",
       image: { url: "", alt: "" },
@@ -265,6 +287,7 @@ export const blockRegistry: BlockMeta[] = [
     type: "imageRightTextLeft",
     label: "Image right, text left",
     description: "Image on the right, heading and text on the left.",
+    category: "images",
     create: () => ({
       type: "imageRightTextLeft",
       image: { url: "", alt: "" },
@@ -277,6 +300,7 @@ export const blockRegistry: BlockMeta[] = [
     type: "imageTitleBelow",
     label: "Image with title below",
     description: "A single image with a title and optional caption underneath.",
+    category: "images",
     create: () => ({
       type: "imageTitleBelow",
       image: { url: "", alt: "" },
@@ -289,6 +313,7 @@ export const blockRegistry: BlockMeta[] = [
     type: "imageTitleBeside",
     label: "Image with title beside",
     description: "Image on one side with a title and text beside it.",
+    category: "images",
     create: () => ({
       type: "imageTitleBeside",
       image: { url: "", alt: "" },
@@ -310,4 +335,52 @@ export function parseBlocks(value: unknown): Block[] {
   return value.filter(
     (b): b is Block => !!b && typeof b === "object" && typeof (b as Block).type === "string",
   );
+}
+
+function stripHtml(value: string): string {
+  return value
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&[a-z]+;/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** A short, HTML-stripped summary of a block for the collapsed card (≤80 chars). */
+export function blockPreview(block: Block): string {
+  let raw = "";
+  switch (block.type) {
+    case "hero":
+    case "richText":
+    case "ctaBanner":
+      raw = block.heading || block.body || "";
+      break;
+    case "faqAccordion":
+      raw = block.heading || block.items[0]?.q || "";
+      break;
+    case "serviceGrid":
+    case "testimonialCarousel":
+    case "locationGrid":
+    case "teamGrid":
+      raw = block.heading || "";
+      break;
+    case "numberedList":
+      raw = block.title || block.intro || block.items[0]?.heading || "";
+      break;
+    case "iconList":
+      raw = block.title || block.intro || block.items[0]?.label || "";
+      break;
+    case "richTextColumns":
+      raw = block.heading || block.intro || block.columns[0]?.body || "";
+      break;
+    case "imageLeftTextRight":
+    case "imageRightTextLeft":
+    case "imageTitleBeside":
+      raw = block.title || block.body || "";
+      break;
+    case "imageTitleBelow":
+      raw = block.title || block.caption || "";
+      break;
+  }
+  const text = stripHtml(raw);
+  return text.length > 80 ? `${text.slice(0, 79).trimEnd()}…` : text;
 }

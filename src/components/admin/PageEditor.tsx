@@ -1,11 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { Plus } from "lucide-react";
 import {
   type Block,
   type BlockType,
   blockRegistry,
-  blockLabel,
 } from "@/lib/cms/blocks";
 import { savePage, publishPage } from "@/app/admin/pages/actions";
 import { StatusBadge } from "./StatusBadge";
@@ -13,6 +28,8 @@ import type { ContentStatus, PageTemplate } from "@prisma/client";
 import { RichTextEditor } from "./RichTextEditor";
 import { MediaPicker } from "./MediaPicker";
 import { IconPicker } from "./IconPicker";
+import { BlockCard } from "./BlockCard";
+import { BlockPicker } from "./BlockPicker";
 
 type PageData = {
   id: string;
@@ -30,6 +47,15 @@ type PageData = {
 const input = "mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm focus:border-brand-dark";
 const labelCls = "block text-xs font-medium text-ink-soft";
 
+type Item = { id: string; block: Block };
+
+let idCounter = 0;
+function makeId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
+  idCounter += 1;
+  return `b${Date.now()}-${idCounter}`;
+}
+
 export function PageEditor({
   page,
   initialBlocks,
@@ -39,35 +65,82 @@ export function PageEditor({
   initialBlocks: Block[];
   canPublish: boolean;
 }) {
-  const [blocks, setBlocks] = useState<Block[]>(initialBlocks);
+  const [items, setItems] = useState<Item[]>(() =>
+    initialBlocks.map((block) => ({ id: makeId(), block })),
+  );
   const [title, setTitle] = useState(page.title);
   const [template, setTemplate] = useState<PageTemplate>(page.template);
   const [hasSidebar, setHasSidebar] = useState(page.hasSidebar);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [insertAt, setInsertAt] = useState<number | null>(null);
 
-  function update(i: number, patch: Partial<Block>) {
-    setBlocks((b) => b.map((blk, idx) => (idx === i ? ({ ...blk, ...patch } as Block) : blk)));
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  function updateBlock(id: string, patch: Partial<Block>) {
+    setItems((arr) =>
+      arr.map((it) => (it.id === id ? { ...it, block: { ...it.block, ...patch } as Block } : it)),
+    );
   }
-  function move(i: number, dir: -1 | 1) {
-    setBlocks((b) => {
-      const j = i + dir;
-      if (j < 0 || j >= b.length) return b;
-      const copy = [...b];
-      [copy[i], copy[j]] = [copy[j], copy[i]];
-      return copy;
+  function removeBlock(id: string) {
+    setItems((arr) => arr.filter((it) => it.id !== id));
+    setExpandedId((cur) => (cur === id ? null : cur));
+  }
+  function duplicateBlock(id: string) {
+    setItems((arr) => {
+      const idx = arr.findIndex((it) => it.id === id);
+      if (idx === -1) return arr;
+      const copy: Item = { id: makeId(), block: structuredClone(arr[idx].block) };
+      return [...arr.slice(0, idx + 1), copy, ...arr.slice(idx + 1)];
     });
   }
-  function remove(i: number) {
-    setBlocks((b) => b.filter((_, idx) => idx !== i));
+  function toggleVisible(id: string) {
+    setItems((arr) =>
+      arr.map((it) =>
+        it.id === id
+          ? { ...it, block: { ...it.block, isVisible: it.block.isVisible === false } as Block }
+          : it,
+      ),
+    );
   }
-  function add(type: BlockType) {
+  function onDragEnd(e: DragEndEvent) {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    setItems((arr) => {
+      const from = arr.findIndex((it) => it.id === active.id);
+      const to = arr.findIndex((it) => it.id === over.id);
+      if (from === -1 || to === -1) return arr;
+      return arrayMove(arr, from, to);
+    });
+  }
+  function openPicker(index: number) {
+    setInsertAt(index);
+    setPickerOpen(true);
+  }
+  const closePicker = useCallback(() => {
+    setPickerOpen(false);
+    setInsertAt(null);
+  }, []);
+  function handlePick(type: BlockType) {
     const meta = blockRegistry.find((m) => m.type === type);
-    if (meta) setBlocks((b) => [...b, meta.create()]);
+    if (!meta) return;
+    const item: Item = { id: makeId(), block: meta.create() };
+    setItems((arr) => {
+      const at = insertAt ?? arr.length;
+      return [...arr.slice(0, at), item, ...arr.slice(at)];
+    });
+    setExpandedId(item.id);
+    setPickerOpen(false);
+    setInsertAt(null);
   }
 
   return (
     <form className="space-y-6">
       <input type="hidden" name="pageId" value={page.id} />
-      <input type="hidden" name="blocks" value={JSON.stringify(blocks)} />
+      <input type="hidden" name="blocks" value={JSON.stringify(items.map((it) => it.block))} />
       <input type="hidden" name="template" value={template} />
       <input type="hidden" name="hasSidebar" value={String(hasSidebar)} />
 
@@ -138,64 +211,77 @@ export function PageEditor({
       </div>
 
       {/* Blocks */}
-      <div className="space-y-4">
-        {blocks.length === 0 && (
-          <p className="rounded-card border border-dashed border-line p-6 text-center text-sm text-ink-soft">
-            No content blocks yet. Add one below.
-          </p>
-        )}
-        {blocks.map((block, i) => (
-          <div
-            key={i}
-            className={`rounded-card border border-line bg-white ${block.isVisible === false ? "opacity-60" : ""}`}
-          >
-            <div className="flex items-center justify-between border-b border-line bg-surface-alt px-4 py-2">
-              <span className="text-sm font-semibold text-brand-dark">
-                {blockLabel(block.type)}
-                {block.isVisible === false && (
-                  <span className="ml-2 rounded bg-surface-alt px-1.5 py-0.5 text-xs font-normal text-ink-soft">
-                    Hidden
-                  </span>
-                )}
-              </span>
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => update(i, { isVisible: block.isVisible === false } as Partial<Block>)}
-                  aria-label={block.isVisible === false ? "Show block" : "Hide block"}
-                  className="rounded p-1 hover:bg-white"
-                >
-                  {block.isVisible === false ? "🙈" : "👁"}
-                </button>
-                <button type="button" onClick={() => move(i, -1)} aria-label="Move up" className="rounded p-1 hover:bg-white">↑</button>
-                <button type="button" onClick={() => move(i, 1)} aria-label="Move down" className="rounded p-1 hover:bg-white">↓</button>
-                <button type="button" onClick={() => remove(i)} aria-label="Remove block" className="rounded p-1 text-accent hover:bg-white">✕</button>
-              </div>
-            </div>
-            <div className="space-y-3 p-4">
-              <BlockFields block={block} onChange={(patch) => update(i, patch)} />
-            </div>
+      <div className="space-y-3">
+        {items.length === 0 ? (
+          <div className="rounded-card border border-dashed border-line p-8 text-center">
+            <p className="text-sm font-semibold text-brand-dark">No content blocks yet</p>
+            <p className="mt-1 text-sm text-ink-soft">
+              Add your first block to start building this page.
+            </p>
+            <button
+              type="button"
+              onClick={() => openPicker(0)}
+              className="mt-3 rounded-full bg-brand-dark px-4 py-2 text-sm font-semibold text-white hover:bg-brand-hover"
+            >
+              + Add block
+            </button>
           </div>
-        ))}
+        ) : (
+          <>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+              <SortableContext
+                items={items.map((it) => it.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {items.map((it, i) => (
+                  <div key={it.id}>
+                    {i > 0 && (
+                      <div className="group flex h-4 items-center justify-center">
+                        <button
+                          type="button"
+                          onClick={() => openPicker(i)}
+                          aria-label="Insert block here"
+                          className="flex h-6 w-6 items-center justify-center rounded-full border border-line bg-white text-ink-soft opacity-0 transition hover:border-brand hover:text-brand-dark group-hover:opacity-100"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </button>
+                      </div>
+                    )}
+                    <BlockCard
+                      id={it.id}
+                      block={it.block}
+                      expanded={expandedId === it.id}
+                      onToggleExpand={() =>
+                        setExpandedId((cur) => (cur === it.id ? null : it.id))
+                      }
+                      onDuplicate={() => duplicateBlock(it.id)}
+                      onToggleVisible={() => toggleVisible(it.id)}
+                      onDelete={() => removeBlock(it.id)}
+                    >
+                      <BlockFields block={it.block} onChange={(patch) => updateBlock(it.id, patch)} />
+                    </BlockCard>
+                  </div>
+                ))}
+              </SortableContext>
+            </DndContext>
+
+            <button
+              type="button"
+              onClick={() => openPicker(items.length)}
+              className="w-full rounded-card border border-dashed border-line py-3 text-sm font-semibold text-brand-dark hover:border-brand hover:bg-surface-alt"
+            >
+              + Add block
+            </button>
+          </>
+        )}
       </div>
 
-      {/* Add block */}
-      <div className="rounded-card border border-line bg-white p-4">
-        <p className={labelCls}>Add a content block</p>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {blockRegistry.map((m) => (
-            <button
-              key={m.type}
-              type="button"
-              onClick={() => add(m.type)}
-              title={m.description}
-              className="rounded-full border border-line px-3 py-1.5 text-sm text-ink hover:border-brand hover:text-brand-dark"
-            >
-              + {m.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <BlockPicker
+        open={pickerOpen}
+        template={template}
+        onPick={handlePick}
+        onClose={closePicker}
+      />
 
       {/* SEO */}
       <details className="rounded-card border border-line bg-white p-4">
