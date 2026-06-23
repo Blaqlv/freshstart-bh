@@ -1,6 +1,6 @@
 # Fresh Start Behavioral Health — Website & Platform Rebuild
 
-Modern Next.js rebuild of [freshstartbhinc.com](https://freshstartbhinc.com): public
+Modern Next.js rebuild of the Fresh Start Behavioral Health website: public
 marketing site + CMS + role-based admin portal + patient & intake portals.
 Same brand, modern execution. Hosted on Vercel; database on Neon Postgres.
 

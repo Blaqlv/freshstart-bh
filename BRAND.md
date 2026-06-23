@@ -61,17 +61,18 @@ gold:         '#ffdd00'
 
 ## Logo & icons
 
-- **Logo (SVG):** `https://assets.freshstartbhinc.com/Images/Sites/F/FreshStartBehavioralHealth/MasterPage/1263619.svg`
-- **Favicon:** `https://assets.freshstartbhinc.com/Images/Sites/F/FreshStartBehavioralHealth/favicon.ico`
-- **Apple touch / splash:** generated from `Splash.png` in the same MasterPage dir.
-- **Accreditation badge present today — OHMAS:** `https://assets.freshstartbhinc.com/Images/Sites/F/FreshStartBehavioralHealth/MasterPage/1340239.png` (links to `https://mha.ohio.gov/`).
+- **Logo (SVG)**, **Favicon**, and an **Apple touch / splash** image: source from the
+  legacy Fresh Start site's MasterPage asset directory (logo `1263619.svg`, `favicon.ico`,
+  `Splash.png`).
+- **Accreditation badge present today — OHMAS:** legacy MasterPage asset `1340239.png`
+  (links to `https://mha.ohio.gov/`).
   - **CARF** badge is named in the brief as also displayed; not located in the
-    homepage snapshot — confirm on `/about-us` / interior pages during build and
-    carry both onto `/about/accreditation` and `/compliance`.
+    homepage snapshot — confirm on interior pages during build and carry both onto
+    `/about/accreditation` and `/compliance`.
 
 > **TODO (asset capture):** download the logo SVG, favicon, and OHMAS badge into
-> `/public/brand/` during scaffold. (Asset host may also sit behind Cloudflare —
-> pull from the Wayback `assets.freshstartbhinc.com` snapshots if blocked.)
+> `/public/brand/` during scaffold. (The legacy asset host may sit behind Cloudflare —
+> pull from a Wayback Machine snapshot of the legacy site if blocked.)
 
 ## Brand voice
 
