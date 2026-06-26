@@ -156,6 +156,29 @@ const TestimonialThumb = () => (
   </Frame>
 );
 
+const ColumnLayoutThumb = () => (
+  <Frame>
+    <rect x="6" y="10" width="32" height="36" rx="2" fill={FILL} />
+    <rect x="42" y="10" width="32" height="36" rx="2" fill={FILL} />
+  </Frame>
+);
+
+const VerticalSpacerThumb = () => (
+  <Frame>
+    <path d="M40 12 l-4 5 h8 z" fill={LINE} />
+    <line x1="14" y1="28" x2="66" y2="28" stroke={LINE} strokeWidth="2" strokeDasharray="5 4" />
+    <path d="M40 44 l-4 -5 h8 z" fill={LINE} />
+  </Frame>
+);
+
+const HorizontalDividerThumb = () => (
+  <Frame>
+    {line(16, 12, 48)}
+    <rect x="8" y="26" width="64" height="2" rx="1" fill={LINE} />
+    {line(16, 40, 48)}
+  </Frame>
+);
+
 const GenericThumb = () => (
   <Frame>{[14, 22, 30, 38].map((y) => line(8, y, 64))}</Frame>
 );
@@ -176,6 +199,9 @@ const thumbnails: Record<BlockType, () => React.ReactElement> = {
   imageRightTextLeft: ImageRightTextLeftThumb,
   imageTitleBelow: ImageTitleBelowThumb,
   imageTitleBeside: ImageTitleBesideThumb,
+  columnLayout: ColumnLayoutThumb,
+  verticalSpacer: VerticalSpacerThumb,
+  horizontalDivider: HorizontalDividerThumb,
 };
 
 export function BlockThumbnail({ type }: { type: BlockType }) {

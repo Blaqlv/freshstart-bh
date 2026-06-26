@@ -19,16 +19,47 @@ export type BlockType =
   | "imageLeftTextRight"
   | "imageRightTextLeft"
   | "imageTitleBelow"
-  | "imageTitleBeside";
+  | "imageTitleBeside"
+  | "columnLayout"
+  | "verticalSpacer"
+  | "horizontalDivider";
 
 export type BlockCategory = "text" | "images" | "layout" | "dynamic";
 
 export const blockCategories: { id: BlockCategory; label: string }[] = [
   { id: "text", label: "Text & Content" },
   { id: "images", label: "Images" },
-  { id: "layout", label: "Layout & Navigation" },
+  { id: "layout", label: "Layout & Structure" },
   { id: "dynamic", label: "Dynamic Content" },
 ];
+
+// ─── Shared background system (hero + ctaBanner) ───────────────────────────
+// Additive: a block with no `background` keeps its original default styling.
+
+export type BackgroundType = "color" | "image" | "gradient";
+
+export type GradientDirection =
+  | "to-r" | "to-l" | "to-b" | "to-t"
+  | "to-br" | "to-bl" | "to-tr" | "to-tl";
+
+export type BlockBackground = {
+  type: BackgroundType;
+  // Colour fill
+  color?: string;
+  colorOpacity?: number; // 0–100, default 100
+  // Image
+  imageUrl?: string;
+  imageAlt?: string;
+  imageObjectPosition?: string; // CSS object-position, e.g. "center top"
+  // Overlay (on top of image)
+  overlayColor?: string; // default "#000000"
+  overlayOpacity?: number; // 0–100, default 40
+  // Gradient
+  gradientFrom?: string;
+  gradientTo?: string;
+  gradientDirection?: GradientDirection;
+  gradientOpacity?: number; // 0–100, default 100
+};
 
 export type HeroBlock = {
   type: "hero";
@@ -37,6 +68,11 @@ export type HeroBlock = {
   body?: string;
   primaryCtaLabel?: string;
   primaryCtaHref?: string;
+  // Enhanced background controls (optional — omitted = original brand-dark hero)
+  background?: BlockBackground;
+  textColor?: string;
+  textAlign?: "left" | "center" | "right";
+  minHeight?: "sm" | "md" | "lg" | "full";
 };
 
 export type RichTextBlock = {
@@ -79,6 +115,14 @@ export type CtaBannerBlock = {
   body?: string;
   ctaLabel?: string;
   ctaHref?: string;
+  // Enhanced background controls (optional — omitted = original brand-dark band)
+  background?: BlockBackground;
+  textColor?: string;
+  textAlign?: "left" | "center" | "right";
+  buttonVariant?: "primary" | "secondary" | "outline" | "white";
+  secondaryCtaLabel?: string;
+  secondaryCtaHref?: string;
+  padding?: "sm" | "md" | "lg";
 };
 
 export type NumberedListBlock = {
@@ -138,6 +182,84 @@ export type ImageTitleBesideBlock = {
   verticalAlign?: "top" | "center";
 };
 
+// ─── Column layout (nested blocks per column) ──────────────────────────────
+
+export type ColumnSplit =
+  | "1/1"
+  | "1-1"
+  | "1-2"
+  | "2-1"
+  | "1-3"
+  | "3-1"
+  | "1-1-1"
+  | "1-1-1-1"
+  | "1-2-1"
+  | "2-1-1"
+  | "1-1-2";
+
+/** Shared split metadata used by the renderer, editor split-picker, and thumbnails. */
+export const COLUMN_SPLITS: { value: ColumnSplit; label: string; ratios: number[] }[] = [
+  { value: "1/1", label: "Full width", ratios: [1] },
+  { value: "1-1", label: "50% / 50%", ratios: [1, 1] },
+  { value: "1-2", label: "33% / 66%", ratios: [1, 2] },
+  { value: "2-1", label: "66% / 33%", ratios: [2, 1] },
+  { value: "1-3", label: "25% / 75%", ratios: [1, 3] },
+  { value: "3-1", label: "75% / 25%", ratios: [3, 1] },
+  { value: "1-1-1", label: "Thirds", ratios: [1, 1, 1] },
+  { value: "1-1-1-1", label: "Quarters", ratios: [1, 1, 1, 1] },
+  { value: "1-2-1", label: "Focus middle", ratios: [1, 2, 1] },
+  { value: "2-1-1", label: "Left heavy", ratios: [2, 1, 1] },
+  { value: "1-1-2", label: "Right heavy", ratios: [1, 1, 2] },
+];
+
+export function columnCountForSplit(split: ColumnSplit): number {
+  return COLUMN_SPLITS.find((s) => s.value === split)?.ratios.length ?? 2;
+}
+
+/** A column's percentage widths for a given split, e.g. "2-1" → [67, 33]. */
+export function columnPercentages(split: ColumnSplit): number[] {
+  const ratios = COLUMN_SPLITS.find((s) => s.value === split)?.ratios ?? [1, 1];
+  const total = ratios.reduce((a, b) => a + b, 0);
+  return ratios.map((r) => Math.round((r / total) * 100));
+}
+
+export type ColumnLayoutBlock = {
+  type: "columnLayout";
+  split: ColumnSplit;
+  gap?: "none" | "sm" | "md" | "lg" | "xl";
+  verticalAlign?: "top" | "center" | "bottom";
+  stackOnMobile?: boolean; // default true
+  reverseOnMobile?: boolean;
+  // Child blocks per column. Index 0 = first column, etc. One level of nesting only.
+  columns: Block[][];
+};
+
+// ─── Vertical spacer ───────────────────────────────────────────────────────
+
+export type SpacerSize = "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "custom";
+
+export type VerticalSpacerBlock = {
+  type: "verticalSpacer";
+  size: SpacerSize;
+  customPx?: number; // only when size === "custom", 4–400
+  showInEditor?: boolean; // default true — dashed outline in admin, invisible on site
+};
+
+// ─── Horizontal divider ────────────────────────────────────────────────────
+
+export type HorizontalDividerBlock = {
+  type: "horizontalDivider";
+  style?: "solid" | "dashed" | "dotted" | "double";
+  thickness?: 1 | 2 | 4;
+  color?: string;
+  width?: "full" | "3/4" | "1/2" | "1/4";
+  align?: "left" | "center" | "right";
+  label?: string;
+  labelSize?: "xs" | "sm" | "base";
+  spacingTop?: Exclude<SpacerSize, "custom">;
+  spacingBottom?: Exclude<SpacerSize, "custom">;
+};
+
 export type Block = (
   | HeroBlock
   | RichTextBlock
@@ -154,6 +276,9 @@ export type Block = (
   | ImageRightTextLeftBlock
   | ImageTitleBelowBlock
   | ImageTitleBesideBlock
+  | ColumnLayoutBlock
+  | VerticalSpacerBlock
+  | HorizontalDividerBlock
 ) & { isVisible?: boolean };
 
 type BlockMeta = {
@@ -324,6 +449,42 @@ export const blockRegistry: BlockMeta[] = [
       verticalAlign: "top",
     }),
   },
+  {
+    type: "columnLayout",
+    label: "Column Layout",
+    description: "Split content into side-by-side columns with configurable width ratios.",
+    category: "layout",
+    create: () => ({
+      type: "columnLayout",
+      split: "1-1",
+      gap: "md",
+      verticalAlign: "top",
+      stackOnMobile: true,
+      columns: [[], []],
+    }),
+  },
+  {
+    type: "verticalSpacer",
+    label: "Vertical Spacer",
+    description: "Add vertical whitespace between sections.",
+    category: "layout",
+    create: () => ({ type: "verticalSpacer", size: "md", showInEditor: true }),
+  },
+  {
+    type: "horizontalDivider",
+    label: "Horizontal Divider",
+    description: "Section separator with optional label text.",
+    category: "layout",
+    create: () => ({
+      type: "horizontalDivider",
+      style: "solid",
+      thickness: 1,
+      width: "full",
+      align: "center",
+      spacingTop: "md",
+      spacingBottom: "md",
+    }),
+  },
 ];
 
 export function blockLabel(type: BlockType): string {
@@ -379,6 +540,18 @@ export function blockPreview(block: Block): string {
       break;
     case "imageTitleBelow":
       raw = block.title || block.caption || "";
+      break;
+    case "columnLayout": {
+      const count = block.columns.length;
+      const total = block.columns.reduce((n, col) => n + col.length, 0);
+      raw = `${count} columns · ${total} block${total === 1 ? "" : "s"}`;
+      break;
+    }
+    case "verticalSpacer":
+      raw = block.size === "custom" ? `${block.customPx ?? 0}px space` : `${block.size} space`;
+      break;
+    case "horizontalDivider":
+      raw = block.label || "Divider";
       break;
   }
   const text = stripHtml(raw);
