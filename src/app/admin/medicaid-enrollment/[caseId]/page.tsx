@@ -6,7 +6,7 @@ import { getCase } from "@/lib/medicaid/cases";
 import { completionPercent, MCO_STATUSES, DOC_STATUSES, ALLOWED_TRANSITIONS } from "@/lib/medicaid/constants";
 import { DocumentUploadForm } from "./DocumentUploadForm";
 import {
-  changeStatusAction, toggleChecklistAction,
+  changeStatusAction, toggleChecklistAction, checklistNoteAction,
   updateCaseAction, mcoStatusAction, reviewDocumentAction,
 } from "./actions";
 
@@ -151,6 +151,16 @@ function Checklist({ c, canManage }: { c: any; canManage: boolean }) {
               <div className="flex-1">
                 <div className="text-sm font-medium text-ink">{it.stepNumber}. {it.title} {it.isRequired ? <span className="text-xs text-accent">(required)</span> : <span className="text-xs text-ink-soft">(optional)</span>}</div>
                 <div className="text-xs text-ink-soft">{it.description}</div>
+                {canManage ? (
+                  <form action={checklistNoteAction} className="mt-2 flex gap-2">
+                    <input type="hidden" name="caseId" value={c.id} />
+                    <input type="hidden" name="itemId" value={it.id} />
+                    <input name="notes" defaultValue={it.notes ?? ""} placeholder="Add a note" className="flex-1 rounded-lg border border-line px-2 py-1 text-xs" />
+                    <button className="rounded-lg border border-line px-2 py-1 text-xs">Save note</button>
+                  </form>
+                ) : it.notes ? (
+                  <div className="mt-1 text-xs text-ink-soft">Note: {it.notes}</div>
+                ) : null}
               </div>
             </div>
           </li>
