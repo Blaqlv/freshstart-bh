@@ -23,7 +23,9 @@ export const metadata: Metadata = {
   },
   description:
     "Fresh Start Behavioral Health provides personalized mental health, substance use, and psychiatric treatment across Dayton, Cincinnati, and Milford, OH.",
-  openGraph: { type: "website", siteName: site.name, locale: "en_US" },
+  openGraph: { type: "website", siteName: site.name, locale: "en_US", url: site.url },
+  // twitter:card site-wide; the card image falls back to the root opengraph-image (B1).
+  twitter: { card: "summary_large_image", site: undefined },
   alternates: {
     // hreflang (D1). Localization is cookie-based (no /es/ path), so EN and the
     // x-default share the canonical URL; the toggle switches content in place.
