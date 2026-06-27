@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { Container } from "@/components/ui/Container";
+import { JsonLd } from "@/components/JsonLd";
+import { blogPostingSchema } from "@/lib/jsonld";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +30,7 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
 
   return (
     <Container className="py-16">
+      <JsonLd schema={blogPostingSchema(post)} />
       <Link href="/resources/blog" className="text-sm text-brand-dark hover:underline">← All posts</Link>
       <article className="mt-6 max-w-3xl">
         <h1 className="text-3xl font-bold text-brand-dark sm:text-4xl">{post.title}</h1>

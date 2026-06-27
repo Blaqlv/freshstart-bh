@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { site } from "@/lib/site";
+import { JsonLd } from "@/components/JsonLd";
+import { aggregateRatingSchema } from "@/lib/jsonld";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +21,7 @@ export default async function ReviewsPage() {
 
   return (
     <>
+      <JsonLd schema={aggregateRatingSchema(site.rating.value, site.rating.count)} />
       <section className="bg-brand-dark text-white">
         <Container className="py-14">
           <h1 className="text-4xl font-bold sm:text-5xl">Reviews</h1>

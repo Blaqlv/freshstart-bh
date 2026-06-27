@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { site } from "@/lib/site";
+import { JsonLd } from "@/components/JsonLd";
+import { locationSchema } from "@/lib/jsonld";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +37,7 @@ export default async function LocationDetail({ params }: { params: Promise<{ slu
 
   return (
     <Container className="py-16">
+      <JsonLd schema={locationSchema(loc)} />
       {/* Breadcrumbs removed per design update - Prompt 4. Do not restore without explicit instruction. */}
       <div className="grid gap-10 lg:grid-cols-2">
         <div>
