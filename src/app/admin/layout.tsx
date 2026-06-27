@@ -25,6 +25,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       { label: "Testimonials", href: "/admin/testimonials" },
     );
   }
+  if (["ADMINISTRATOR", "CLINICAL_DIRECTOR"].includes(session.role)) {
+    nav.push({ label: "Review moderation", href: "/admin/reviews" });
+  }
   if (can(session.role, "appointments:read") || can(session.role, "billing:manage")) {
     nav.push({ label: "Form submissions", href: "/admin/submissions" });
   }

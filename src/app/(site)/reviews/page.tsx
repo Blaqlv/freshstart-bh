@@ -14,8 +14,10 @@ export const metadata: Metadata = {
 };
 
 export default async function ReviewsPage() {
+  // Only staff-approved reviews are ever shown publicly (A9). Rejected and
+  // pending submissions never appear here.
   const items = await db.testimonial.findMany({
-    where: { status: "PUBLISHED" },
+    where: { moderation: "APPROVED" },
     orderBy: { order: "asc" },
   });
 

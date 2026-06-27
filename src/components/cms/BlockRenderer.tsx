@@ -227,8 +227,9 @@ async function BlockView({ block }: { block: Block }) {
     }
 
     case "testimonialCarousel": {
+      // Only staff-approved reviews surface publicly (A9).
       const items = await db.testimonial.findMany({
-        where: { status: "PUBLISHED" },
+        where: { moderation: "APPROVED" },
         orderBy: { order: "asc" },
         take: 6,
       });
