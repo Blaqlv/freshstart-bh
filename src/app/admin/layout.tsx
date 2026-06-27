@@ -34,6 +34,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (["ADMINISTRATOR", "COMPLIANCE_OFFICER", "RECEPTIONIST"].includes(session.role)) {
     nav.push({ label: "Public form log", href: "/admin/public-submissions" });
   }
+  if (session.role === "ADMINISTRATOR") nav.push({ label: "Locations", href: "/admin/locations" });
   if (can(session.role, "content:publish")) nav.push({ label: "Translations", href: "/admin/translations" });
   if (can(session.role, "users:manage")) nav.push({ label: "Users", href: "/admin/users" });
   if (can(session.role, "dashboard:read")) nav.push({ label: "Analytics dashboard", href: "/dashboard" });
