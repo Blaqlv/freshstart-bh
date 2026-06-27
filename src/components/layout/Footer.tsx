@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { footerNav, locations, site } from "@/lib/site";
+import { CookieSettingsLink } from "@/components/consent/CookieSettingsLink";
 
 export function Footer() {
   return (
@@ -63,6 +64,12 @@ export function Footer() {
         </div>
 
         <div className="mt-10 border-t border-white/15 pt-6 text-xs text-white/80">
+          <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+            <Link href="/privacy/cookie-policy" className="hover:text-white hover:underline">
+              Cookie Policy
+            </Link>
+            <CookieSettingsLink className="hover:text-white hover:underline" />
+          </div>
           <p>
             © {new Date().getFullYear()} {site.name}. All rights reserved. Individual results
             are not guaranteed and may vary from person to person.

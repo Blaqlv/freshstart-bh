@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Rubik } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 import { site } from "@/lib/site";
+import { ConsentProvider } from "@/components/consent/ConsentProvider";
+import { ConsentGatedScripts } from "@/components/consent/ConsentGatedScripts";
+import { CookieConsentBanner } from "@/components/consent/CookieConsentBanner";
 
 const rubik = Rubik({
   variable: "--font-rubik",
@@ -26,20 +28,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${rubik.variable} h-full`}>
       <body className="flex min-h-full flex-col">
-        {/* Google Tag Manager — preserve analytics continuity (see BRAND.md) */}
-        <Script id="gtm" strategy="afterInteractive">
-          {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${site.gtmId}');`}
-        </Script>
-        <noscript>
-          <iframe
-            src={`https://www.googletagmanager.com/ns.html?id=${site.gtmId}`}
-            height="0"
-            width="0"
-            style={{ display: "none", visibility: "hidden" }}
-            title="gtm"
-          />
-        </noscript>
-        {children}
+        <ConsentProvider>
+          {/* GTM loads only after analytics consent (A1). The <noscript> fallback
+              is intentionally omitted: it would fire GTM without consent. */}
+          <ConsentGatedScripts />
+          {children}
+          <CookieConsentBanner />
+        </ConsentProvider>
       </body>
     </html>
   );
