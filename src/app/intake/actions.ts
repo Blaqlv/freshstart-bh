@@ -13,6 +13,7 @@ import {
   requireIntakeId,
 } from "@/lib/intake-auth";
 import { INTAKE_STEPS, REVIEW_STEP_INDEX, requiredFieldsFor } from "@/lib/intake";
+import { requestContext } from "@/lib/public-submissions";
 
 export type StepState = { error?: string; missing?: string[]; resumeCode?: string };
 
@@ -122,9 +123,22 @@ export async function submitIntake(_prev: StepState, formData: FormData): Promis
     return { error: "Required consents are missing. Go back to the Consents step.", missing: missingConsent };
   }
 
+  // Capture SMS consent on the clear columns so v1.4 SMS can use it without
+  // decrypting the intake blob (A5 step 3). phone comes from the demographics step.
+  const smsConsentGiven = data.smsConsent === "Yes";
+  const { ipHash } = await requestContext();
   await db.intakeSubmission.update({
     where: { id },
-    data: { status: "SUBMITTED", signedName, signedAt: new Date(), submittedAt: new Date() },
+    data: {
+      status: "SUBMITTED",
+      signedName,
+      signedAt: new Date(),
+      submittedAt: new Date(),
+      smsConsentGiven,
+      smsConsentAt: smsConsentGiven ? new Date() : null,
+      smsConsentIpHash: smsConsentGiven ? ipHash : null,
+      phoneNumber: data.phone || null,
+    },
   });
   await audit({ sub: id, email: intake.email }, "intake.submit", "IntakeSubmission", id);
   await notifyStaff("Intake submitted", `A new patient intake was submitted (${intake.email}).`);
