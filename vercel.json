@@ -8,6 +8,14 @@
     {
       "path": "/api/cron/retention",
       "schedule": "30 7 * * *"
+    },
+    {
+      "path": "/api/cron/health",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/appointment-reminders",
+      "schedule": "0 * * * *"
     }
   ]
 }

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { primaryNav, site } from "@/lib/site";
 import { cn } from "@/lib/cn";
+import { LanguageToggle } from "@/components/LanguageToggle";
 
 export function Header() {
   const [open, setOpen] = useState(false);
@@ -54,6 +55,7 @@ export function Header() {
         </nav>
 
         <div className="hidden items-center gap-3 lg:flex">
+          <LanguageToggle />
           <a href={site.phoneHref} className="text-sm font-semibold text-brand-dark">
             {site.phone}
           </a>

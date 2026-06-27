@@ -9,7 +9,11 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // Pooled Neon endpoint for the app runtime.
+  url       = env("DATABASE_URL")
+  // Direct (non-pooler) endpoint for migrations/introspection — PgBouncer
+  // transaction pooling can't run migrations. Falls back to DATABASE_URL if unset.
+  directUrl = env("DIRECT_DATABASE_URL")
 }
 
 // ---------------------------------------------------------------------------
@@ -31,9 +35,26 @@ enum ContentStatus {
   ARCHIVED
 }
 
+// Moderation lifecycle for user-submitted content (reviews/testimonials). Kept
+// separate from ContentStatus so nothing reaches the public site without an
+// explicit staff approval step (A9).
+enum ModerationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum PageTemplate {
   SERVICE_DETAIL
   GENERAL
+}
+
+// Spanish translation progress per CMS page (D3).
+enum TranslationStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  NEEDS_REVIEW
+  APPROVED
 }
 
 model User {
@@ -49,12 +70,13 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  pageVersions PageVersion[]
-  blogPosts    BlogPost[]
-  uploads      Media[]
+  pageVersions     PageVersion[]
+  blogPosts        BlogPost[]
+  uploads          Media[]
   // Optional link to a public-facing provider profile (for PROVIDER role)
-  provider     Provider?     @relation(fields: [providerId], references: [id])
-  providerId   String?
+  provider         Provider?         @relation(fields: [providerId], references: [id])
+  providerId       String?
+  appointmentSlots AppointmentSlot[] // slots this user (PROVIDER) staffs (A6)
 }
 
 // ---------------------------------------------------------------------------
@@ -62,21 +84,23 @@ model User {
 // ---------------------------------------------------------------------------
 
 model Page {
-  id               String        @id @default(cuid())
-  slug             String        @unique
-  title            String
-  status           ContentStatus @default(DRAFT)
+  id                String            @id @default(cuid())
+  slug              String            @unique
+  title             String
+  status            ContentStatus     @default(DRAFT)
   // SEO fields
-  seoTitle         String?
-  seoDescription   String?
-  canonicalUrl     String?
-  ogImageUrl       String?
-  template         PageTemplate  @default(GENERAL)
-  hasSidebar       Boolean       @default(false) // GENERAL only; SERVICE_DETAIL renders the sidebar regardless
+  seoTitle          String?
+  seoDescription    String?
+  canonicalUrl      String?
+  ogImageUrl        String?
+  template          PageTemplate      @default(GENERAL)
+  hasSidebar        Boolean           @default(false) // GENERAL only; SERVICE_DETAIL renders the sidebar regardless
   // Pointer to the version currently shown to the public
-  publishedVersion Int?
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  publishedVersion  Int?
+  // Spanish translation workflow status (D3).
+  translationStatus TranslationStatus @default(NOT_STARTED)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 
   versions PageVersion[]
 
@@ -148,6 +172,17 @@ model Testimonial {
   status    ContentStatus @default(PUBLISHED)
   order     Int           @default(0)
   createdAt DateTime      @default(now())
+
+  // Moderation pipeline (A9): user-submitted reviews land as PENDING and are
+  // only shown publicly once staff set moderation = APPROVED.
+  moderation      ModerationStatus @default(PENDING)
+  rejectionReason String? // internal only — never shown to the submitter
+  originalQuote   String? // preserved when staff use "Edit & Approve"
+  moderatedById   String?
+  moderatedAt     DateTime?
+  ipHash          String? // sha256(ip) of submitter for abuse tracing (A8)
+
+  @@index([moderation])
 }
 
 model Service {
@@ -165,21 +200,28 @@ model Service {
 }
 
 model Location {
-  id        String        @id @default(cuid())
-  slug      String        @unique
-  name      String
-  street    String
-  city      String
-  state     String
-  zip       String
-  phone     String?
-  blurb     String?
-  lat       Float?
-  lng       Float?
-  status    ContentStatus @default(PUBLISHED)
-  order     Int           @default(0)
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  id         String        @id @default(cuid())
+  slug       String        @unique
+  name       String
+  street     String
+  city       String
+  state      String
+  zip        String
+  phone      String?
+  blurb      String?
+  lat        Float?
+  lng        Float?
+  // Google Business Profile listing id for this location, so CMS edits can sync
+  // to the matching GBP listing (A4). Pulled from the location's Maps URL.
+  gbpPlaceId String?
+  // JSON array of opening hours rows, used by JSON-LD + GBP sync (A3/A4).
+  hours      Json          @default("[]")
+  status     ContentStatus @default(PUBLISHED)
+  order      Int           @default(0)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  appointmentSlots AppointmentSlot[] // bookable slots at this location (A6)
 }
 
 model BlogPost {
@@ -311,6 +353,21 @@ model Patient {
   lastLoginAt  DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+
+  // SMS / communication consent + preferences (A5, E6, E7). phoneNumber is kept
+  // in the clear because it is required to dispatch SMS; everything clinical
+  // stays encrypted. preferredLanguage drives EN/ES template selection (E7).
+  smsConsentGiven           Boolean   @default(false)
+  smsConsentAt              DateTime?
+  smsConsentIpHash          String?
+  phoneNumber               String?
+  phoneVerified             Boolean   @default(false)
+  preferredLanguage         String    @default("en")
+  smsAppointmentReminders   Boolean   @default(true)
+  smsPortalAlerts           Boolean   @default(true)
+  emailAppointmentReminders Boolean   @default(true)
+  emailPortalAlerts         Boolean   @default(true)
+  lastPortalSmsAt           DateTime? // E3 debounce window for portal alerts
 
   appointments Appointment[]
   threads      MessageThread[]
@@ -476,6 +533,88 @@ model IntakeSubmission {
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
+  // SMS consent captured at intake for pre-portal patients (A5). preferredLanguage
+  // carries the patient's choice into SMS/portal once they have credentials (E7).
+  smsConsentGiven   Boolean   @default(false)
+  smsConsentAt      DateTime?
+  smsConsentIpHash  String?
+  phoneNumber       String?
+  phoneVerified     Boolean   @default(false)
+  preferredLanguage String    @default("en")
+
   @@index([email])
   @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Public form submission audit log (A2)
+//
+// Separate from the portal-facing FormSubmission model: an immutable, low-PHI
+// record of every public form hit (appointment request, insurance verification,
+// contact). IPs are stored ONLY as a sha256 hash; sensitive free-text fields are
+// redacted before the payload is written. Retention is enforced by a cron job.
+// ---------------------------------------------------------------------------
+
+model PublicFormSubmission {
+  id          String   @id @default(cuid())
+  formType    String // "appointment_request" | "insurance_verification" | "contact"
+  submittedAt DateTime @default(now())
+  ipHash      String // sha256(ip) — never the raw IP
+  userAgent   String?
+  sessionId   String?
+  payload     Json // non-PHI metadata only; sensitive fields redacted before write
+  status      String   @default("received") // received | processing | complete | rejected | honeypot_triggered
+  staffNotes  String?
+  createdBy   String? // staff user id if actioned
+
+  @@index([formType, status])
+  @@index([submittedAt])
+}
+
+// ---------------------------------------------------------------------------
+// Appointment booking (A6) — slot-ready schema
+//
+// AppointmentSlot is forward-compatible with v2.0 self-scheduling; the v1
+// appointment request form keeps writing AppointmentRequest with slotId = null
+// (manual scheduling). No destructive migration needed when 2.0 ships.
+// ---------------------------------------------------------------------------
+
+model AppointmentSlot {
+  id          String   @id @default(cuid())
+  providerId  String
+  locationId  String
+  serviceType String
+  startTime   DateTime
+  endTime     DateTime
+  isAvailable Boolean  @default(true)
+  bookedBy    String? // Patient.id of the patient who books (v2.0)
+  provider    User     @relation(fields: [providerId], references: [id])
+  location    Location @relation(fields: [locationId], references: [id])
+
+  requests AppointmentRequest[]
+
+  @@index([providerId])
+  @@index([locationId])
+  @@index([startTime])
+}
+
+model AppointmentRequest {
+  id               String           @id @default(cuid())
+  patientName      String
+  phone            String
+  email            String
+  locationId       String
+  serviceType      String
+  preferredContact String
+  smsConsent       Boolean          @default(false)
+  smsConsentAt     DateTime? // A5: when consent was captured
+  smsConsentIpHash String? // A5: sha256(ip) at consent time
+  slotId           String? // null = manual scheduling (v1); set = self-scheduled (v2.0)
+  status           String           @default("pending")
+  notes            String?
+  submittedAt      DateTime         @default(now())
+  slot             AppointmentSlot? @relation(fields: [slotId], references: [id])
+
+  @@index([status])
+  @@index([submittedAt])
 }

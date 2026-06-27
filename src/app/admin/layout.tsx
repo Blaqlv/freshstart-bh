@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { can } from "@/lib/rbac";
 import { roleLabels } from "@/lib/rbac";
 import { Sidebar, type NavItem } from "@/components/admin/Sidebar";
+import { StatusPill } from "@/components/StatusPill";
 import { logout } from "./actions";
 
 export const metadata: Metadata = {
@@ -24,12 +25,20 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       { label: "Testimonials", href: "/admin/testimonials" },
     );
   }
+  if (["ADMINISTRATOR", "CLINICAL_DIRECTOR"].includes(session.role)) {
+    nav.push({ label: "Review moderation", href: "/admin/reviews" });
+  }
   if (can(session.role, "appointments:read") || can(session.role, "billing:manage")) {
     nav.push({ label: "Form submissions", href: "/admin/submissions" });
   }
   if (can(session.role, "appointments:read")) nav.push({ label: "Patient intakes", href: "/admin/intake" });
   if (can(session.role, "forms:manage")) nav.push({ label: "Form management", href: "/admin/forms" });
   if (can(session.role, "incidents:manage")) nav.push({ label: "Incidents", href: "/admin/incidents" });
+  if (["ADMINISTRATOR", "COMPLIANCE_OFFICER", "RECEPTIONIST"].includes(session.role)) {
+    nav.push({ label: "Public form log", href: "/admin/public-submissions" });
+  }
+  if (session.role === "ADMINISTRATOR") nav.push({ label: "Locations", href: "/admin/locations" });
+  if (can(session.role, "content:publish")) nav.push({ label: "Translations", href: "/admin/translations" });
   if (can(session.role, "users:manage")) nav.push({ label: "Users", href: "/admin/users" });
   if (can(session.role, "dashboard:read")) nav.push({ label: "Analytics dashboard", href: "/dashboard" });
   if (can(session.role, "audit:read")) nav.push({ label: "Audit log", href: "/admin/audit" });
@@ -57,6 +66,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               Sign out
             </button>
           </form>
+          <div className="mt-4 border-t border-line pt-4">
+            <StatusPill />
+          </div>
         </div>
       </aside>
       <div className="p-6 lg:p-10">{children}</div>

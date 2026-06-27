@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { NO_PHI_NOTICE } from "@/lib/site";
 import { submitAppointment, type FormState } from "@/app/_actions/forms";
+import { HoneypotField } from "@/components/forms/HoneypotField";
 
 type Option = { value: string; label: string };
 
@@ -40,6 +41,7 @@ export function AppointmentForm({
 
   return (
     <form id="appointment" action={action} className="space-y-4">
+      <HoneypotField />
       <div role="note" className="rounded-lg border-l-4 border-accent bg-accent/5 px-4 py-3 text-sm text-ink">
         {NO_PHI_NOTICE}
       </div>
@@ -90,6 +92,15 @@ export function AppointmentForm({
         <span>
           I consent to be contacted by Fresh Start Behavioral Health about my request. I understand
           not to include medical or confidential health information in this form.
+        </span>
+      </label>
+
+      {/* SMS opt-in (A5) — independent of the contact consent above. */}
+      <label className="flex items-start gap-2 text-sm text-ink-soft">
+        <input type="checkbox" name="smsConsent" className="mt-1" />
+        <span>
+          I consent to receive appointment reminders and scheduling updates by text message to the
+          phone number provided. Message and data rates may apply. Reply STOP to unsubscribe.
         </span>
       </label>
 

@@ -32,5 +32,27 @@ export async function GET(req: Request) {
     await audit(null, "retention.purge", "PatientDocument", undefined, { purged: stale.length, graceDays: GRACE_DAYS });
   }
 
-  return NextResponse.json({ ok: true, purged: stale.length });
+  // Public form submission retention (A2 step 5): contact records age out at
+  // 365 days; insurance verification + intake are kept 7 years per HIPAA.
+  const now = Date.now();
+  const contactCutoff = new Date(now - 365 * 86_400_000);
+  const hipaaCutoff = new Date(now - 2555 * 86_400_000);
+  const publicPurge = await db.publicFormSubmission.deleteMany({
+    where: {
+      OR: [
+        { formType: "contact", submittedAt: { lt: contactCutoff } },
+        {
+          formType: { in: ["insurance_verification", "intake"] },
+          submittedAt: { lt: hipaaCutoff },
+        },
+      ],
+    },
+  });
+  if (publicPurge.count) {
+    await audit(null, "retention.purge", "PublicFormSubmission", undefined, {
+      purged: publicPurge.count,
+    });
+  }
+
+  return NextResponse.json({ ok: true, purged: stale.length, publicPurged: publicPurge.count });
 }

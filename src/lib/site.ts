@@ -7,6 +7,8 @@
  * where available, or written in-brand where flagged "new".
  */
 
+import { CRISIS_PHONE, CRISIS_PHONE_HREF } from "./constants";
+
 export const site = {
   name: "Fresh Start Behavioral Health, Inc.",
   shortName: "Fresh Start Behavioral Health",
@@ -19,8 +21,9 @@ export const site = {
       ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
       : "http://localhost:3000"),
   tagline: "Everyone Deserves a Fresh Start",
-  phone: "937-579-0073",
-  phoneHref: "tel:+19375790073",
+  // Crisis-critical — sourced from constants.ts, never the DB (A12).
+  phone: CRISIS_PHONE,
+  phoneHref: CRISIS_PHONE_HREF,
   sameDayNote: "Same-day appointments if you call our offices before 10 AM.",
   facebook: "https://www.facebook.com/FreshStartBHInc/",
   google: "https://goo.gl/maps/vSR1AU4wNex7CvRt6",

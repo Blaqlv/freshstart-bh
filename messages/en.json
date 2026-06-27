@@ -1,0 +1,65 @@
+{
+  "crisis": {
+    "banner": "If you are experiencing a mental health emergency, call 911 or go to your nearest emergency department."
+  },
+  "language": {
+    "label": "Language",
+    "english": "English",
+    "spanish": "Español",
+    "toggleEn": "EN",
+    "toggleEs": "ES"
+  },
+  "nav": {
+    "about": "About",
+    "services": "Services",
+    "staff": "Staff",
+    "providers": "Providers",
+    "insurance": "Insurance",
+    "locations": "Locations",
+    "contact": "Contact",
+    "reviews": "Reviews",
+    "resources": "Resources",
+    "crisisSupport": "Crisis Support"
+  },
+  "footer": {
+    "tagline": "Everyone Deserves a Fresh Start",
+    "contact": "Contact",
+    "callUs": "Call us",
+    "ourOffices": "Our offices",
+    "cookiePolicy": "Cookie Policy",
+    "cookieSettings": "Cookie Settings",
+    "rights": "All rights reserved. Individual results are not guaranteed and may vary from person to person."
+  },
+  "common": {
+    "fullName": "Full name",
+    "phone": "Phone",
+    "email": "Email",
+    "submitting": "Submitting…",
+    "noPhiNotice": "Please do not include medical information or confidential health information in this form."
+  },
+  "appointmentForm": {
+    "heading": "Request an appointment",
+    "preferredContact": "Preferred contact method",
+    "preferredLocation": "Preferred location",
+    "preferredService": "Preferred service",
+    "selectLocation": "Select a location",
+    "selectService": "Select a service",
+    "contactConsent": "I consent to be contacted by Fresh Start Behavioral Health about my request. I understand not to include medical or confidential health information in this form.",
+    "smsConsent": "I consent to receive appointment reminders and scheduling updates by text message to the phone number provided. Message and data rates may apply. Reply STOP to unsubscribe.",
+    "submit": "Request Appointment",
+    "successHeading": "Thank you — we'll be in touch.",
+    "successBody": "A team member will contact you using your preferred method. For urgent needs, please call 937-579-0073.",
+    "validationGeneric": "Please check the form and try again."
+  },
+  "errors": {
+    "notFoundTitle": "Page Not Found",
+    "notFoundBody": "The page you're looking for may have moved or no longer exists.",
+    "goHome": "Go to Homepage",
+    "findService": "Find a Service",
+    "contactUs": "Contact Us",
+    "serverTitle": "Something Went Wrong",
+    "serverBody": "We're experiencing a technical issue. If you need immediate support, please call us directly.",
+    "tryAgain": "Try again",
+    "returnHome": "Return to Homepage"
+  }
+}

@@ -75,3 +75,27 @@ export async function requireIntakeId(): Promise<string> {
   if (!id) throw new Error("NO_INTAKE_SESSION");
   return id;
 }
+
+/**
+ * Signed, 72-hour save-and-resume token for the SMS resume link (E4). The intake
+ * id is the JWT subject — it is never exposed in the URL path; the whole token is
+ * opaque and self-expiring.
+ */
+export async function signResumeToken(intakeId: string): Promise<string> {
+  return new SignJWT({ kind: "intake-resume" })
+    .setProtectedHeader({ alg: "HS256" })
+    .setSubject(intakeId)
+    .setIssuedAt()
+    .setExpirationTime("72h")
+    .sign(secret());
+}
+
+export async function verifyResumeToken(token: string): Promise<string | null> {
+  try {
+    const { payload } = await jwtVerify(token, secret());
+    if (payload.kind !== "intake-resume") return null;
+    return String(payload.sub);
+  } catch {
+    return null;
+  }
+}

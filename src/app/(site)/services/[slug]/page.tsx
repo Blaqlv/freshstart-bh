@@ -5,6 +5,8 @@ import { db } from "@/lib/db";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { acceptedInsurance, site } from "@/lib/site";
+import { JsonLd } from "@/components/JsonLd";
+import { serviceSchema } from "@/lib/jsonld";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +41,7 @@ export default async function ServiceDetail({ params }: { params: Promise<{ slug
 
   return (
     <>
+      <JsonLd schema={serviceSchema(service)} />
       <section className="bg-brand-dark text-white">
         <Container className="py-14">
           {/* Breadcrumbs removed per design update - Prompt 4. Do not restore without explicit instruction. */}

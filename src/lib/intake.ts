@@ -40,6 +40,12 @@ export const INTAKE_STEPS: IntakeStep[] = [
       US_STATE,
       { name: "zip", label: "ZIP", type: "text", required: true },
       { name: "gender", label: "Gender", type: "select", options: ["Female", "Male", "Non-binary", "Prefer to self-describe", "Prefer not to say"] },
+      {
+        name: "smsConsent",
+        label:
+          "I consent to receive appointment reminders and scheduling updates by text message to the phone number provided. Message and data rates may apply. Reply STOP to unsubscribe.",
+        type: "checkbox",
+      },
     ],
   },
   {

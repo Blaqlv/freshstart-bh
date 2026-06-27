@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CRISIS_BANNER } from "@/lib/site";
+import { useLocale } from "next-intl";
+import { crisisBanner } from "@/lib/constants";
 
 const KEY = "fs-crisis-dismissed";
 
@@ -11,6 +12,9 @@ const KEY = "fs-crisis-dismissed";
  */
 export function CrisisBanner() {
   const [hidden, setHidden] = useState(true);
+  // Locale-aware copy, still sourced from constants (never the DB) so the banner
+  // stays resilient when data fetches fail (A12 + D2).
+  const locale = useLocale();
 
   useEffect(() => {
     setHidden(sessionStorage.getItem(KEY) === "1");
@@ -28,7 +32,7 @@ export function CrisisBanner() {
         >
           <path d="M12 2 1 21h22L12 2Zm0 5 7.53 13H4.47L12 7Zm-1 5v4h2v-4h-2Zm0 5v2h2v-2h-2Z" />
         </svg>
-        <p className="flex-1 font-medium">{CRISIS_BANNER}</p>
+        <p className="flex-1 font-medium">{crisisBanner(locale)}</p>
         <button
           type="button"
           onClick={() => {

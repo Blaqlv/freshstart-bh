@@ -1,9 +1,32 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { IntakeResume } from "@/components/intake/IntakeResume";
+import { db } from "@/lib/db";
+import { createIntakeSessionCookie, verifyResumeToken } from "@/lib/intake-auth";
+import { audit } from "@/lib/audit";
 
 export const dynamic = "force-dynamic";
 
-export default function ResumePage() {
+export default async function ResumePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ token?: string }>;
+}) {
+  // SMS resume link (E4): a valid signed token logs the patient straight back in
+  // without exposing their id in the URL.
+  const { token } = await searchParams;
+  if (token) {
+    const intakeId = await verifyResumeToken(token);
+    if (intakeId) {
+      const intake = await db.intakeSubmission.findUnique({ where: { id: intakeId } });
+      if (intake && intake.status === "IN_PROGRESS") {
+        await createIntakeSessionCookie(intakeId);
+        await audit({ sub: intakeId, email: intake.email }, "intake.resume.token", "IntakeSubmission", intakeId);
+        redirect("/intake/form");
+      }
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>

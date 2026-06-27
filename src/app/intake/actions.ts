@@ -5,14 +5,20 @@ import { db } from "@/lib/db";
 import { encryptJson, decryptJson } from "@/lib/crypto";
 import { audit } from "@/lib/audit";
 import { notifyStaff } from "@/lib/notify";
+import { cookies } from "next/headers";
 import {
   createIntakeSessionCookie,
   destroyIntakeSessionCookie,
   generateResumeCode,
   hashResumeCode,
   requireIntakeId,
+  signResumeToken,
 } from "@/lib/intake-auth";
 import { INTAKE_STEPS, REVIEW_STEP_INDEX, requiredFieldsFor } from "@/lib/intake";
+import { requestContext } from "@/lib/public-submissions";
+import { sendSms } from "@/lib/sms";
+import { intakeResumeLink } from "@/lib/sms-templates";
+import { site } from "@/lib/site";
 
 export type StepState = { error?: string; missing?: string[]; resumeCode?: string };
 
@@ -86,6 +92,16 @@ export async function saveStep(_prev: StepState, formData: FormData): Promise<St
     }
   }
 
+  // Save-and-resume link via SMS (E4): once the patient has provided a phone and
+  // SMS consent, text them a signed 72h resume link — once, to avoid spamming.
+  if (!back && data.smsConsent === "Yes" && data.phone && data.resumeSmsSent !== "Yes") {
+    const token = await signResumeToken(id);
+    const url = `${site.url.replace(/\/$/, "")}/intake/resume?token=${token}`;
+    const locale = (await cookies()).get("NEXT_LOCALE")?.value === "es" ? "es" : "en";
+    const res = await sendSms(data.phone, intakeResumeLink(locale, url), "intake_resume_link");
+    if (res.ok) data.resumeSmsSent = "Yes";
+  }
+
   const nextStep = Math.min(Math.max(stepIndex + (back ? -1 : 1), 0), REVIEW_STEP_INDEX);
   await db.intakeSubmission.update({
     where: { id },
@@ -122,9 +138,22 @@ export async function submitIntake(_prev: StepState, formData: FormData): Promis
     return { error: "Required consents are missing. Go back to the Consents step.", missing: missingConsent };
   }
 
+  // Capture SMS consent on the clear columns so v1.4 SMS can use it without
+  // decrypting the intake blob (A5 step 3). phone comes from the demographics step.
+  const smsConsentGiven = data.smsConsent === "Yes";
+  const { ipHash } = await requestContext();
   await db.intakeSubmission.update({
     where: { id },
-    data: { status: "SUBMITTED", signedName, signedAt: new Date(), submittedAt: new Date() },
+    data: {
+      status: "SUBMITTED",
+      signedName,
+      signedAt: new Date(),
+      submittedAt: new Date(),
+      smsConsentGiven,
+      smsConsentAt: smsConsentGiven ? new Date() : null,
+      smsConsentIpHash: smsConsentGiven ? ipHash : null,
+      phoneNumber: data.phone || null,
+    },
   });
   await audit({ sub: id, email: intake.email }, "intake.submit", "IntakeSubmission", id);
   await notifyStaff("Intake submitted", `A new patient intake was submitted (${intake.email}).`);

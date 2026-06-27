@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
+import { JsonLd } from "@/components/JsonLd";
+import { providerSchema } from "@/lib/jsonld";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +34,7 @@ export default async function ProviderProfile({ params }: { params: Promise<{ sl
 
   return (
     <Container className="py-16">
+      <JsonLd schema={providerSchema(p)} />
       <Link href="/providers" className="text-sm text-brand-dark hover:underline">← All providers</Link>
       <div className="mt-6 grid gap-10 lg:grid-cols-3">
         <div className="lg:col-span-2">
