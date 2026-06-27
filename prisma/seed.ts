@@ -108,6 +108,13 @@ const USERS: { email: string; name: string; role: Role }[] = [
 const CONTENT_ONLY = process.env.SEED_PROFILE === "content";
 
 async function main() {
+  // v2.3 — the single tenant that exists today (multi-tenant foundation).
+  await db.tenant.upsert({
+    where: { slug: "fresh-start" },
+    update: {},
+    create: { slug: "fresh-start", name: "Fresh Start Behavioral Health" },
+  });
+
   const passwordHash = bcrypt.hashSync("ChangeMe123!", 10);
   const usersToSeed = CONTENT_ONLY
     ? [
