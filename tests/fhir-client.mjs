@@ -1,7 +1,6 @@
 // tests/fhir-client.mjs
 import assert from "node:assert";
 import { fhirGet } from "../src/lib/fhir/client.ts";
-import { FhirError } from "../src/lib/fhir/types.ts";
 
 const auditCalls = [];
 const auditImpl = (action, entity, meta) => auditCalls.push({ action, entity, meta });
@@ -25,7 +24,9 @@ assert.match(auditCalls[0].meta.patientIdHash, /^[0-9a-f]{64}$/);
 assert.strictEqual(auditCalls[0].meta.status, 200);
 assert.ok(!("body" in auditCalls[0].meta), "audit must never include the response body");
 
-// Error path: 404 throws FhirError carrying the OperationOutcome.
+// Error path: 404 throws FhirError carrying the OperationOutcome. We assert on
+// name + shape rather than `instanceof` so the test is robust to tsx loading the
+// module under a different module system (CJS vs ESM) than the test itself.
 const errFetch = async () =>
   new Response(JSON.stringify({ resourceType: "OperationOutcome", issue: [{ code: "not-found" }] }), {
     status: 404,
@@ -38,7 +39,10 @@ await assert.rejects(
       patientFhirId: "p1",
       resourceType: "Appointment",
     }),
-  (e) => e instanceof FhirError && e.status === 404,
+  (e) =>
+    e.name === "FhirError" &&
+    e.status === 404 &&
+    e.outcome?.issue?.[0]?.code === "not-found",
 );
 assert.strictEqual(auditCalls.length, 2, "error path still audits the attempt");
 
