@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { can } from "@/lib/rbac";
 import { roleLabels } from "@/lib/rbac";
 import { Sidebar, type NavItem } from "@/components/admin/Sidebar";
+import { StatusPill } from "@/components/StatusPill";
 import { logout } from "./actions";
 
 export const metadata: Metadata = {
@@ -61,6 +62,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               Sign out
             </button>
           </form>
+          <div className="mt-4 border-t border-line pt-4">
+            <StatusPill />
+          </div>
         </div>
       </aside>
       <div className="p-6 lg:p-10">{children}</div>

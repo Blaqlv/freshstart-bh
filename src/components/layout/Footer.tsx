@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { footerNav, locations, site } from "@/lib/site";
 import { CookieSettingsLink } from "@/components/consent/CookieSettingsLink";
+import { StatusPill } from "@/components/StatusPill";
+import { STATUSPAGE_URL } from "@/lib/statuspage";
 
 export function Footer() {
   return (
@@ -69,6 +71,15 @@ export function Footer() {
               Cookie Policy
             </Link>
             <CookieSettingsLink className="hover:text-white hover:underline" />
+            <a
+              href={STATUSPAGE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-white hover:underline"
+            >
+              System Status
+            </a>
+            <StatusPill variant="dark" />
           </div>
           <p>
             © {new Date().getFullYear()} {site.name}. All rights reserved. Individual results

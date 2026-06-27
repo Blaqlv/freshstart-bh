@@ -3,6 +3,7 @@ import { getPatientSession } from "@/lib/patient-auth";
 import { PortalNav, type PortalNavItem } from "@/components/portal/PortalNav";
 import { IdleTimeout } from "@/components/portal/IdleTimeout";
 import { CrisisBanner } from "@/components/layout/CrisisBanner";
+import { StatusPill } from "@/components/StatusPill";
 import { patientLogout } from "./actions";
 
 export const metadata: Metadata = {
@@ -49,6 +50,9 @@ export default async function PatientPortalLayout({ children }: { children: Reac
                 Sign out
               </button>
             </form>
+            <div className="mt-4 border-t border-line pt-4">
+              <StatusPill />
+            </div>
           </div>
         </aside>
         <div className="p-6 lg:p-10">{children}</div>
