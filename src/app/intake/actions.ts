@@ -5,15 +5,20 @@ import { db } from "@/lib/db";
 import { encryptJson, decryptJson } from "@/lib/crypto";
 import { audit } from "@/lib/audit";
 import { notifyStaff } from "@/lib/notify";
+import { cookies } from "next/headers";
 import {
   createIntakeSessionCookie,
   destroyIntakeSessionCookie,
   generateResumeCode,
   hashResumeCode,
   requireIntakeId,
+  signResumeToken,
 } from "@/lib/intake-auth";
 import { INTAKE_STEPS, REVIEW_STEP_INDEX, requiredFieldsFor } from "@/lib/intake";
 import { requestContext } from "@/lib/public-submissions";
+import { sendSms } from "@/lib/sms";
+import { intakeResumeLink } from "@/lib/sms-templates";
+import { site } from "@/lib/site";
 
 export type StepState = { error?: string; missing?: string[]; resumeCode?: string };
 
@@ -85,6 +90,16 @@ export async function saveStep(_prev: StepState, formData: FormData): Promise<St
       await db.intakeSubmission.update({ where: { id }, data: { dataEncrypted: encryptJson(data) } });
       return { error: "Please complete the required fields.", missing };
     }
+  }
+
+  // Save-and-resume link via SMS (E4): once the patient has provided a phone and
+  // SMS consent, text them a signed 72h resume link — once, to avoid spamming.
+  if (!back && data.smsConsent === "Yes" && data.phone && data.resumeSmsSent !== "Yes") {
+    const token = await signResumeToken(id);
+    const url = `${site.url.replace(/\/$/, "")}/intake/resume?token=${token}`;
+    const locale = (await cookies()).get("NEXT_LOCALE")?.value === "es" ? "es" : "en";
+    const res = await sendSms(data.phone, intakeResumeLink(locale, url), "intake_resume_link");
+    if (res.ok) data.resumeSmsSent = "Yes";
   }
 
   const nextStep = Math.min(Math.max(stepIndex + (back ? -1 : 1), 0), REVIEW_STEP_INDEX);

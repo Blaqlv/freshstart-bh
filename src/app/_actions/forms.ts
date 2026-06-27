@@ -5,9 +5,12 @@ import { db } from "@/lib/db";
 import { encryptJson } from "@/lib/crypto";
 import { audit } from "@/lib/audit";
 import { notifyStaff } from "@/lib/notify";
+import { cookies } from "next/headers";
 import { checkRateLimit, TOO_MANY_REQUESTS } from "@/lib/rate-limit";
 import { logPublicSubmission, requestContext } from "@/lib/public-submissions";
 import { HONEYPOT_FIELD } from "@/components/forms/HoneypotField";
+import { sendSms } from "@/lib/sms";
+import { appointmentConfirmation } from "@/lib/sms-templates";
 
 export type FormState = { ok?: boolean; error?: string };
 
@@ -95,6 +98,13 @@ export async function submitAppointment(_prev: FormState, fd: FormData): Promise
   });
 
   await notifyStaff("New appointment request", `Service ${data.service} at ${data.location}`);
+
+  // Confirmation SMS at submission (E2 step 2) — only with SMS consent.
+  if (smsConsent) {
+    const locale = (await cookies()).get("NEXT_LOCALE")?.value === "es" ? "es" : "en";
+    const firstName = data.name.trim().split(/\s+/)[0] || data.name;
+    await sendSms(data.phone, appointmentConfirmation(locale, firstName), "appointment_confirmation");
+  }
   return { ok: true };
 }
 
