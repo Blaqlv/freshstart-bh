@@ -45,6 +45,14 @@ enum PageTemplate {
   GENERAL
 }
 
+// Spanish translation progress per CMS page (D3).
+enum TranslationStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  NEEDS_REVIEW
+  APPROVED
+}
+
 model User {
   id           String    @id @default(cuid())
   email        String    @unique
@@ -72,21 +80,23 @@ model User {
 // ---------------------------------------------------------------------------
 
 model Page {
-  id               String        @id @default(cuid())
-  slug             String        @unique
-  title            String
-  status           ContentStatus @default(DRAFT)
+  id                String            @id @default(cuid())
+  slug              String            @unique
+  title             String
+  status            ContentStatus     @default(DRAFT)
   // SEO fields
-  seoTitle         String?
-  seoDescription   String?
-  canonicalUrl     String?
-  ogImageUrl       String?
-  template         PageTemplate  @default(GENERAL)
-  hasSidebar       Boolean       @default(false) // GENERAL only; SERVICE_DETAIL renders the sidebar regardless
+  seoTitle          String?
+  seoDescription    String?
+  canonicalUrl      String?
+  ogImageUrl        String?
+  template          PageTemplate      @default(GENERAL)
+  hasSidebar        Boolean           @default(false) // GENERAL only; SERVICE_DETAIL renders the sidebar regardless
   // Pointer to the version currently shown to the public
-  publishedVersion Int?
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  publishedVersion  Int?
+  // Spanish translation workflow status (D3).
+  translationStatus TranslationStatus @default(NOT_STARTED)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 
   versions PageVersion[]
 

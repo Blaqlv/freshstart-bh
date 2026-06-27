@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Rubik } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
 import { site } from "@/lib/site";
 import { ConsentProvider } from "@/components/consent/ConsentProvider";
@@ -22,19 +24,28 @@ export const metadata: Metadata = {
   description:
     "Fresh Start Behavioral Health provides personalized mental health, substance use, and psychiatric treatment across Dayton, Cincinnati, and Milford, OH.",
   openGraph: { type: "website", siteName: site.name, locale: "en_US" },
+  alternates: {
+    // hreflang (D1). Localization is cookie-based (no /es/ path), so EN and the
+    // x-default share the canonical URL; the toggle switches content in place.
+    languages: { en: "/", "x-default": "/" },
+  },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale();
+  const messages = await getMessages();
   return (
-    <html lang="en" className={`${rubik.variable} h-full`}>
+    <html lang={locale} className={`${rubik.variable} h-full`}>
       <body className="flex min-h-full flex-col">
-        <ConsentProvider>
-          {/* GTM loads only after analytics consent (A1). The <noscript> fallback
-              is intentionally omitted: it would fire GTM without consent. */}
-          <ConsentGatedScripts />
-          {children}
-          <CookieConsentBanner />
-        </ConsentProvider>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <ConsentProvider>
+            {/* GTM loads only after analytics consent (A1). The <noscript> fallback
+                is intentionally omitted: it would fire GTM without consent. */}
+            <ConsentGatedScripts />
+            {children}
+            <CookieConsentBanner />
+          </ConsentProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

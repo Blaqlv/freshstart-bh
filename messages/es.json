@@ -1,0 +1,66 @@
+{
+  "_note": "NEEDS HUMAN REVIEW — machine-assisted Spanish. Must be reviewed by a bilingual clinical staff member before going live with real patients (see Part D / D2).",
+  "crisis": {
+    "banner": "Si está experimentando una emergencia de salud mental, llame al 911 o vaya al departamento de emergencias más cercano."
+  },
+  "language": {
+    "label": "Idioma",
+    "english": "English",
+    "spanish": "Español",
+    "toggleEn": "EN",
+    "toggleEs": "ES"
+  },
+  "nav": {
+    "about": "Nosotros",
+    "services": "Servicios",
+    "staff": "Personal",
+    "providers": "Proveedores",
+    "insurance": "Seguro",
+    "locations": "Ubicaciones",
+    "contact": "Contacto",
+    "reviews": "Reseñas",
+    "resources": "Recursos",
+    "crisisSupport": "Apoyo en Crisis"
+  },
+  "footer": {
+    "tagline": "Todos Merecen un Nuevo Comienzo",
+    "contact": "Contacto",
+    "callUs": "Llámenos",
+    "ourOffices": "Nuestras oficinas",
+    "cookiePolicy": "Política de Cookies",
+    "cookieSettings": "Configuración de Cookies",
+    "rights": "Todos los derechos reservados. Los resultados individuales no están garantizados y pueden variar de una persona a otra."
+  },
+  "common": {
+    "fullName": "Nombre completo",
+    "phone": "Teléfono",
+    "email": "Correo electrónico",
+    "submitting": "Enviando…",
+    "noPhiNotice": "Por favor, no incluya información médica ni información de salud confidencial en este formulario."
+  },
+  "appointmentForm": {
+    "heading": "Solicitar una cita",
+    "preferredContact": "Método de contacto preferido",
+    "preferredLocation": "Ubicación preferida",
+    "preferredService": "Servicio preferido",
+    "selectLocation": "Seleccione una ubicación",
+    "selectService": "Seleccione un servicio",
+    "contactConsent": "Doy mi consentimiento para ser contactado por Fresh Start Behavioral Health sobre mi solicitud. Entiendo que no debo incluir información médica ni de salud confidencial en este formulario.",
+    "smsConsent": "Doy mi consentimiento para recibir recordatorios de citas y actualizaciones de programación por mensaje de texto al número de teléfono proporcionado. Pueden aplicarse tarifas de mensajes y datos. Responda STOP para cancelar la suscripción.",
+    "submit": "Solicitar Cita",
+    "successHeading": "Gracias — nos pondremos en contacto.",
+    "successBody": "Un miembro del equipo se comunicará con usted utilizando su método preferido. Para necesidades urgentes, llame al 937-579-0073.",
+    "validationGeneric": "Por favor, revise el formulario e inténtelo de nuevo."
+  },
+  "errors": {
+    "notFoundTitle": "Página No Encontrada",
+    "notFoundBody": "Es posible que la página que busca se haya movido o ya no exista.",
+    "goHome": "Ir a la Página Principal",
+    "findService": "Buscar un Servicio",
+    "contactUs": "Contáctenos",
+    "serverTitle": "Algo Salió Mal",
+    "serverBody": "Estamos experimentando un problema técnico. Si necesita asistencia inmediata, llámenos directamente.",
+    "tryAgain": "Intentar de nuevo",
+    "returnHome": "Volver a la Página Principal"
+  }
+}
