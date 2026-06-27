@@ -369,6 +369,12 @@ model Patient {
   emailPortalAlerts         Boolean   @default(true)
   lastPortalSmsAt           DateTime? // E3 debounce window for portal alerts
 
+  // EHR / FHIR identity linking (v2.1). The patient's FHIR Patient resource id;
+  // their EHR record is fetched on demand and never persisted here.
+  fhirPatientId  String?   @unique
+  fhirLinkStatus String?   // "linked" | "pending" | "unlinked"
+  fhirLinkedAt   DateTime?
+
   appointments Appointment[]
   threads      MessageThread[]
   refills      RefillRequest[]
@@ -455,6 +461,9 @@ model RefillRequest {
   medicationEncrypted String // PHI
   pharmacyEncrypted   String? // PHI
   notesEncrypted      String? // PHI
+  // Set when the refill was initiated from the EHR medication list (v2.1). Holds
+  // the medication display name only; not written back to the EHR in this version.
+  sourceFhirMedication String?
   status              RefillStatus @default(REQUESTED)
   createdAt           DateTime     @default(now())
   updatedAt           DateTime     @updatedAt
