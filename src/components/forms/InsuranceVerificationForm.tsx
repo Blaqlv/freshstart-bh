@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { acceptedInsurance } from "@/lib/site";
 import { submitInsurance, type FormState } from "@/app/_actions/forms";
+import { HoneypotField } from "@/components/forms/HoneypotField";
 
 const field = "mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm focus:border-brand-dark";
 const labelCls = "block text-sm font-medium text-ink";
@@ -31,6 +32,7 @@ export function InsuranceVerificationForm() {
 
   return (
     <form action={action} className="space-y-4">
+      <HoneypotField />
       <div role="note" className="rounded-lg border-l-4 border-brand bg-brand-tint px-4 py-3 text-sm text-ink">
         Your information is transmitted over a secure connection and stored encrypted.
       </div>
