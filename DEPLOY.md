@@ -57,6 +57,21 @@ No AWS anywhere in the stack.
 - After go-live: submit `sitemap.xml` in Google Search Console and spot-check
   top legacy URLs resolve to their new paths.
 
+## Cron jobs & the Hobby plan limit
+Vercel **Hobby** only runs **daily** crons, so `vercel.json` ships just the daily
+`backup` + `retention` jobs. Two sub-daily jobs exist as routes but are NOT in
+`vercel.json` on Hobby:
+
+| Endpoint | Intended schedule | Purpose |
+| --- | --- | --- |
+| `/api/cron/health` | `*/5 * * * *` | health check + Statuspage auto-incident (A11) |
+| `/api/cron/appointment-reminders` | `0 * * * *` | 24h-ahead SMS reminders (E2) |
+
+To enable them: upgrade to **Vercel Pro** and re-add both to `vercel.json`, **or**
+drive them from an external scheduler (GitHub Actions, cron-job.org) that GETs each
+endpoint with `Authorization: Bearer $CRON_SECRET`. The reminder job assumes an
+hourly cadence (1-hour selection window).
+
 ## QA before launch
 ```bash
 npm run build      # production build
