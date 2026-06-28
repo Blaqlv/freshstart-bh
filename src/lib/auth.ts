@@ -2,7 +2,10 @@ import "server-only";
 import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 import type { Role } from "@prisma/client";
-import { can, type Capability } from "@/lib/rbac";
+import { type Capability } from "@/lib/rbac";
+import { redirect } from "next/navigation";
+import { getEffectivePermissions, moduleIsEnabled } from "@/lib/permissions";
+import { CAPABILITY_PERMISSIONS } from "@/lib/capability-map";
 
 /**
  * Lightweight admin session: a jose-signed JWT in an httpOnly cookie.
@@ -18,6 +21,8 @@ export type Session = {
   email: string;
   name: string;
   role: Role;
+  roleKey: string;
+  isSuperAdmin: boolean;
 };
 
 function secret() {
@@ -27,7 +32,13 @@ function secret() {
 }
 
 export async function signSession(session: Session): Promise<string> {
-  return new SignJWT({ email: session.email, name: session.name, role: session.role })
+  return new SignJWT({
+    email: session.email,
+    name: session.name,
+    role: session.role,
+    roleKey: session.roleKey,
+    isSuperAdmin: session.isSuperAdmin,
+  })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(session.sub)
     .setIssuedAt()
@@ -38,11 +49,14 @@ export async function signSession(session: Session): Promise<string> {
 export async function verifySession(token: string): Promise<Session | null> {
   try {
     const { payload } = await jwtVerify(token, secret());
+    const role = payload.role as Role;
     return {
       sub: String(payload.sub),
       email: String(payload.email),
       name: String(payload.name),
-      role: payload.role as Role,
+      role,
+      roleKey: typeof payload.roleKey === "string" ? payload.roleKey : role.toLowerCase(),
+      isSuperAdmin: payload.isSuperAdmin === true,
     };
   } catch {
     return null;
@@ -77,9 +91,27 @@ export async function requireSession(): Promise<Session> {
   return s;
 }
 
-/** Throws if the session lacks the capability (data-layer enforcement). */
+/** Throws if the session lacks the capability (DB-backed, live per request). */
 export async function requireCapability(capability: Capability): Promise<Session> {
   const s = await requireSession();
-  if (!can(s.role, capability)) throw new Error("FORBIDDEN");
+  if (s.isSuperAdmin) return s;
+  const required = CAPABILITY_PERMISSIONS[capability] ?? [];
+  if (required.length === 0) throw new Error("FORBIDDEN");
+  const perms = await getEffectivePermissions(s.roleKey);
+  if (!required.every((p) => perms.has(p))) throw new Error("FORBIDDEN");
   return s;
+}
+
+/** Redirects non-Super-Admins away from Super-Admin-only routes. */
+export async function requireSuperAdmin(): Promise<Session> {
+  const s = await getSession();
+  if (!s || !s.isSuperAdmin) redirect("/admin/unavailable");
+  return s;
+}
+
+/** Redirects to /admin/unavailable when a module is globally disabled. */
+export async function requireModule(moduleKey: string): Promise<void> {
+  if (!(await moduleIsEnabled(moduleKey))) {
+    redirect(`/admin/unavailable?m=${encodeURIComponent(moduleKey)}`);
+  }
 }

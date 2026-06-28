@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { createSessionCookie } from "@/lib/auth";
 import { audit } from "@/lib/audit";
 import { verifyToken } from "@/lib/totp";
+import { effectiveRoleKey } from "@/lib/roles";
 
 export type LoginState = { error?: string; needsMfa?: boolean };
 
@@ -33,7 +34,14 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
   }
 
   await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
-  await createSessionCookie({ sub: user.id, email: user.email, name: user.name, role: user.role });
+  await createSessionCookie({
+    sub: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    roleKey: effectiveRoleKey(user),
+    isSuperAdmin: user.isSuperAdmin,
+  });
   await audit({ sub: user.id, email: user.email }, "auth.login", "User", user.id, {
     mfa: user.mfaEnabled,
   });
