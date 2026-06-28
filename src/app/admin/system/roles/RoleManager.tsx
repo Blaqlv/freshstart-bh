@@ -58,7 +58,7 @@ export function RoleManager({ roles, counts }: { roles: Role[]; counts: Record<s
         </button>
       </div>
 
-      <RoleTable roles={active} counts={counts} onEdit={(r) => { setError(null); setEditing(r); }} onDeactivate={(r) => setConfirmOff(r)} />
+      <RoleTable roles={active} counts={counts} onEdit={(r) => { setError(null); setEditing(r); }} onDeactivate={(r) => { setError(null); setConfirmOff(r); }} />
 
       {inactive.length > 0 && (
         <details className="rounded-card border border-line bg-white p-4">
