@@ -6,9 +6,10 @@ import { setUserRole } from "./actions";
 export type AssignableRole = { key: string; label: string; isBuiltin: boolean; permissionLabels: string[] };
 
 export function RoleAssign({
-  userId, currentKey, currentLabel, roles, viewerIsSuperAdmin, disabled,
+  userId, userName, currentKey, currentLabel, roles, viewerIsSuperAdmin, disabled,
 }: {
   userId: string;
+  userName: string;
   currentKey: string;
   currentLabel: string;
   roles: AssignableRole[];
@@ -32,7 +33,7 @@ export function RoleAssign({
       <div className="flex items-center gap-2">
         <select
           name="role"
-          aria-label="Role"
+          aria-label={`Role for ${userName}`}
           value={selected}
           onChange={(e) => setSelected(e.target.value)}
           className="rounded border border-line px-2 py-1 text-xs"

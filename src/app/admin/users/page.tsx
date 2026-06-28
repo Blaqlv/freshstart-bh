@@ -68,10 +68,11 @@ export default async function UsersAdmin() {
                 <td className="px-4 py-3">
                   {(() => {
                     const key = effectiveRoleKey(u);
-                    const label = roles.find((r) => r.key === key)?.label ?? roleLabels[u.role];
+                    const label = u.isSuperAdmin ? "Super Admin" : (roles.find((r) => r.key === key)?.label ?? roleLabels[u.role]);
                     return (
                       <RoleAssign
                         userId={u.id}
+                        userName={u.name}
                         currentKey={key}
                         currentLabel={label}
                         roles={roles}
