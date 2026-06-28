@@ -48,7 +48,7 @@ export async function signSession(session: Session): Promise<string> {
 
 export async function verifySession(token: string): Promise<Session | null> {
   try {
-    const { payload } = await jwtVerify(token, secret());
+    const { payload } = await jwtVerify(token, secret(), { algorithms: ["HS256"] });
     const role = payload.role as Role;
     return {
       sub: String(payload.sub),
@@ -102,14 +102,20 @@ export async function requireCapability(capability: Capability): Promise<Session
   return s;
 }
 
-/** Redirects non-Super-Admins away from Super-Admin-only routes. */
+/**
+ * Redirects non-Super-Admins away from Super-Admin-only routes.
+ * Uses redirect() (throws NEXT_REDIRECT) — call outside any try/catch.
+ */
 export async function requireSuperAdmin(): Promise<Session> {
-  const s = await getSession();
-  if (!s || !s.isSuperAdmin) redirect("/admin/unavailable");
+  const s = await requireSession();
+  if (!s.isSuperAdmin) redirect("/admin/unavailable");
   return s;
 }
 
-/** Redirects to /admin/unavailable when a module is globally disabled. */
+/**
+ * Redirects to /admin/unavailable when a module is globally disabled.
+ * Uses redirect() (throws NEXT_REDIRECT) — call outside any try/catch.
+ */
 export async function requireModule(moduleKey: string): Promise<void> {
   if (!(await moduleIsEnabled(moduleKey))) {
     redirect(`/admin/unavailable?m=${encodeURIComponent(moduleKey)}`);
