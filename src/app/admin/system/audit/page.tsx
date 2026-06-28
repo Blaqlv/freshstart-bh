@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { listSystemAudit } from "@/lib/system/registry";
 import { formatAuditRow } from "@/lib/system/helpers";
 
@@ -12,7 +11,8 @@ export default async function SystemAuditPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-ink-soft">System configuration changes. Most recent 500 shown.</p>
-        <Link href="/admin/system/audit/export" className="rounded-full border border-line px-4 py-2 text-sm font-medium text-ink hover:bg-surface-alt">Export CSV</Link>
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+        <a href="/admin/system/audit/export" className="rounded-full border border-line px-4 py-2 text-sm font-medium text-ink hover:bg-surface-alt">Export CSV</a>
       </div>
       <div className="overflow-hidden rounded-card border border-line bg-white">
         <table className="w-full text-sm">
