@@ -1,5 +1,7 @@
 import { db } from "@/lib/db";
 import { effectiveRoleKey } from "@/lib/roles";
+import { getEffectivePermissions } from "@/lib/permissions";
+import { isBuiltInRoleKey } from "@/lib/system/helpers";
 
 /** All modules with their last-editor display name resolved. */
 export async function listModulesWithEditors() {
@@ -56,4 +58,30 @@ export async function listSystemAudit(take = 500) {
     orderBy: { createdAt: "desc" },
     take,
   });
+}
+
+export type AssignableRole = {
+  key: string;
+  label: string;
+  isBuiltin: boolean;
+  permissionLabels: string[];
+};
+
+/** Active roles a user can be assigned (excludes super_admin), each with a
+ *  human-readable summary of the permissions it grants (Prompt 3 §6.1). */
+export async function assignableRoles(): Promise<AssignableRole[]> {
+  const roles = await db.systemRole.findMany({
+    where: { isActive: true, key: { not: "super_admin" } },
+    orderBy: { label: "asc" },
+  });
+  const perms = await db.permission.findMany({ select: { key: true, label: true } });
+  const labelByKey = new Map(perms.map((p) => [p.key, p.label]));
+
+  const out: AssignableRole[] = [];
+  for (const r of roles) {
+    const granted = await getEffectivePermissions(r.key);
+    const permissionLabels = [...granted].map((k) => labelByKey.get(k) ?? k).sort();
+    out.push({ key: r.key, label: r.label, isBuiltin: isBuiltInRoleKey(r.key), permissionLabels });
+  }
+  return out;
 }
