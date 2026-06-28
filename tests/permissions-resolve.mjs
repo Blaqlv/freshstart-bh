@@ -34,4 +34,22 @@ out = resolveEffectivePermissions({
 });
 assert.deepStrictEqual([...out], []);
 
+// Missing access row for a module -> deny (fail-closed default).
+out = resolveEffectivePermissions({
+  grants: ["cms.edit_pages"],
+  permModule,
+  modules: [{ key: "cms", isEnabled: true }],
+  access: [], // no ModuleRoleAccess row at all
+});
+assert.deepStrictEqual([...out], [], "missing access row denies");
+
+// Unknown permission key (not in permModule) -> deny.
+out = resolveEffectivePermissions({
+  grants: ["nonexistent.permission"],
+  permModule,
+  modules: [{ key: "cms", isEnabled: true }],
+  access: [{ moduleKey: "cms", canAccess: true }],
+});
+assert.deepStrictEqual([...out], [], "unknown permission denies");
+
 console.log("permissions-resolve test PASSED");
