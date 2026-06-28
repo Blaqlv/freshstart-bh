@@ -16,7 +16,9 @@ export type Capability =
   | "incidents:manage"
   | "dashboard:read"
   | "billing:manage"
-  | "appointments:read";
+  | "appointments:read"
+  | "patients:read"
+  | "patients:manage";
 
 const ALL: Capability[] = [
   "content:read",
@@ -31,6 +33,8 @@ const ALL: Capability[] = [
   "dashboard:read",
   "billing:manage",
   "appointments:read",
+  "patients:read",
+  "patients:manage",
 ];
 
 export const roleCapabilities: Record<Role, Capability[]> = {
@@ -42,6 +46,7 @@ export const roleCapabilities: Record<Role, Capability[]> = {
     "providers:write",
     "dashboard:read",
     "incidents:manage",
+    "patients:read",
   ],
   COMPLIANCE_OFFICER: ["content:read", "audit:read", "incidents:manage", "dashboard:read"],
   RECEPTIONIST: ["content:read", "content:write", "appointments:read"],

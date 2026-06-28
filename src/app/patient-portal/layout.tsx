@@ -15,6 +15,7 @@ const NAV: PortalNavItem[] = [
   { label: "Overview", href: "/patient-portal" },
   { label: "Messages", href: "/patient-portal/messages" },
   { label: "Appointments", href: "/patient-portal/appointments" },
+  { label: "My Health", href: "/patient-portal/health" },
   { label: "Prescription refills", href: "/patient-portal/refills" },
   { label: "Documents", href: "/patient-portal/documents" },
   { label: "Billing statements", href: "/patient-portal/billing" },
