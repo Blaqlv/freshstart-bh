@@ -66,3 +66,20 @@ export function auditRowsToCsv(rows: AuditCsvRow[]): string {
   }
   return lines.join("\n");
 }
+
+type RawAudit = { createdAt: Date | string; action: string; entityId: string | null; actorEmail: string | null; metadata: unknown };
+
+/** Flatten an AuditLog row into display fields for the system audit table/CSV. */
+export function formatAuditRow(r: RawAudit): AuditCsvRow {
+  const m = (r.metadata ?? {}) as Record<string, unknown>;
+  const target = (m.target as string) ?? (m.roleKey as string) ?? (m.moduleKey as string) ?? r.entityId ?? "";
+  const fmt = (v: unknown) => (v === undefined || v === null ? "" : typeof v === "object" ? JSON.stringify(v) : String(v));
+  return {
+    createdAt: r.createdAt,
+    action: r.action,
+    target,
+    actorEmail: r.actorEmail,
+    prev: fmt(m.prev),
+    next: fmt(m.next),
+  };
+}
