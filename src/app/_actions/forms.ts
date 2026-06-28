@@ -11,8 +11,20 @@ import { logPublicSubmission, requestContext } from "@/lib/public-submissions";
 import { HONEYPOT_FIELD } from "@/components/forms/HoneypotField";
 import { sendSms } from "@/lib/sms";
 import { appointmentConfirmation } from "@/lib/sms-templates";
+import { checkEligibility } from "@/lib/eligibility/adapter";
+import { payerCodeFor } from "@/lib/insurance/payers";
 
-export type FormState = { ok?: boolean; error?: string };
+export type FormState = {
+  ok?: boolean;
+  error?: string;
+  eligibility?: {
+    status: "active" | "inactive" | "unknown" | "api_error";
+    coverageType?: string;
+    effectiveDate?: string;
+    copay?: string | null;
+    deductible?: string | null;
+  };
+};
 
 const appointmentSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -153,5 +165,43 @@ export async function submitInsurance(_prev: FormState, fd: FormData): Promise<F
   });
 
   await notifyStaff("New insurance verification request", `Provider: ${data.provider}`);
-  return { ok: true };
+
+  // Real-time eligibility (v2.2). Best-effort; never blocks or leaks raw errors.
+  const [first, ...rest] = data.name.trim().split(/\s+/);
+  let eligibility: FormState["eligibility"] = { status: "unknown" };
+  const payerCode = await payerCodeFor(data.provider);
+  if (payerCode) {
+    const r = await checkEligibility({
+      patientFirstName: first ?? "",
+      patientLastName: rest.join(" "),
+      patientDob: data.dob,
+      memberId: data.memberId,
+      insurancePayerCode: payerCode,
+    });
+    eligibility = {
+      status: r.status,
+      coverageType: r.coverageType,
+      effectiveDate: r.effectiveDate,
+      copay: r.copay,
+      deductible: r.deductible,
+    };
+    await db.verificationAttempt.create({
+      data: {
+        insurerName: data.provider,
+        payerCode,
+        resultStatus: r.status,
+        rawResponseHash: r.rawResponseHash,
+        source: "insurance_form",
+        formSubmissionId: sub.id,
+        staffReviewed: r.status === "active", // auto-verified when active
+        staffReviewedAt: r.status === "active" ? new Date() : null,
+      },
+    });
+  } else {
+    await db.verificationAttempt.create({
+      data: { insurerName: data.provider, payerCode: "", resultStatus: "unknown", rawResponseHash: "", source: "insurance_form", formSubmissionId: sub.id },
+    });
+  }
+
+  return { ok: true, eligibility };
 }
