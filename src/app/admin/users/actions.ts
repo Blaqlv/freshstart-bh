@@ -66,8 +66,8 @@ export async function setUserRole(formData: FormData) {
   await audit({ sub: session.sub, email: session.email }, "user.role", "User", id, { from, to: key });
 
   // Best-effort courtesy email — never block the role change on email.
-  const role = await db.systemRole.findUnique({ where: { key }, select: { label: true } });
   try {
+    const role = await db.systemRole.findUnique({ where: { key }, select: { label: true } });
     await sendEmail({
       to: user.email,
       subject: "Your access role has changed",
