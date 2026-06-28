@@ -21,6 +21,12 @@ export default async function IntakeDetail({ params }: { params: Promise<{ id: s
     status: intake.status,
   });
 
+  // v2.2 — latest automated eligibility result for this intake (PII-free).
+  const eligibility = await db.verificationAttempt.findFirst({
+    where: { intakeId: intake.id, source: "intake" },
+    orderBy: { submittedAt: "desc" },
+  });
+
   return (
     <div className="max-w-2xl space-y-6">
       <Link href="/admin/intake" className="text-sm text-brand-dark hover:underline">← All intakes</Link>
@@ -33,6 +39,13 @@ export default async function IntakeDetail({ params }: { params: Promise<{ id: s
             : "In progress (not yet submitted)"}
         </p>
       </div>
+
+      {eligibility && (
+        <div className="rounded-card border border-line bg-white p-4 text-sm">
+          <span className="font-medium text-ink">Insurance eligibility:</span>{" "}
+          <span className="text-ink-soft">{eligibility.insurerName} — {eligibility.resultStatus}</span>
+        </div>
+      )}
 
       {INTAKE_STEPS.map((step) => (
         <section key={step.key}>
