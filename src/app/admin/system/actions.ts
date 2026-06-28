@@ -30,12 +30,18 @@ export async function toggleModule(key: string, enabled: boolean): Promise<Resul
 export async function setModuleRoleAccess(moduleKey: string, roleKey: string, canAccess: boolean): Promise<Result> {
   const s = await requireSuperAdmin();
   if (roleKey === "super_admin") return { ok: false, error: "Super Admin always has access." };
+  const mod = await db.systemModule.findUnique({ where: { key: moduleKey }, select: { key: true } });
+  if (!mod) return { ok: false, error: "Module not found." };
+  const existing = await db.moduleRoleAccess.findUnique({
+    where: { moduleKey_roleKey: { moduleKey, roleKey } },
+    select: { canAccess: true },
+  });
   await db.moduleRoleAccess.upsert({
     where: { moduleKey_roleKey: { moduleKey, roleKey } },
     update: { canAccess },
     create: { moduleKey, roleKey, canAccess },
   });
-  await audit({ sub: s.sub, email: s.email }, "system.module.access", "SystemModule", moduleKey, { moduleKey, roleKey, next: canAccess });
+  await audit({ sub: s.sub, email: s.email }, "system.module.access", "SystemModule", moduleKey, { moduleKey, roleKey, prev: existing?.canAccess ?? null, next: canAccess });
   revalidateSystem();
   return { ok: true };
 }
@@ -83,6 +89,8 @@ export async function updateRole(roleKey: string, input: { label: string; descri
 export async function deactivateRole(roleKey: string): Promise<Result> {
   const s = await requireSuperAdmin();
   if (isBuiltInRoleKey(roleKey)) return { ok: false, error: "Built-in roles cannot be deactivated." };
+  const role = await db.systemRole.findUnique({ where: { key: roleKey } });
+  if (!role) return { ok: false, error: "Role not found." };
   const users = await db.user.findMany({ select: { role: true, customRoleKey: true } });
   const count = users.filter((u) => effectiveRoleKey(u) === roleKey).length;
   if (count > 0) return { ok: false, error: `${count} user(s) hold this role — reassign them in User Management first.` };
@@ -94,6 +102,9 @@ export async function deactivateRole(roleKey: string): Promise<Result> {
 
 export async function restoreRole(roleKey: string): Promise<Result> {
   const s = await requireSuperAdmin();
+  const role = await db.systemRole.findUnique({ where: { key: roleKey } });
+  if (!role) return { ok: false, error: "Role not found." };
+  if (role.isActive) return { ok: true };
   await db.systemRole.update({ where: { key: roleKey }, data: { isActive: true } });
   await audit({ sub: s.sub, email: s.email }, "system.role.restore", "SystemRole", roleKey, { prev: "inactive", next: "active" });
   revalidateSystem();
@@ -103,12 +114,18 @@ export async function restoreRole(roleKey: string): Promise<Result> {
 export async function setRolePermission(roleKey: string, permissionKey: string, granted: boolean): Promise<Result> {
   const s = await requireSuperAdmin();
   if (roleKey === "super_admin") return { ok: false, error: "Super Admin has unrestricted access and cannot be edited." };
+  const perm = await db.permission.findUnique({ where: { key: permissionKey }, select: { key: true } });
+  if (!perm) return { ok: false, error: "Permission not found." };
+  const existing = await db.rolePermission.findUnique({
+    where: { roleKey_permissionKey: { roleKey, permissionKey } },
+    select: { granted: true },
+  });
   await db.rolePermission.upsert({
     where: { roleKey_permissionKey: { roleKey, permissionKey } },
     update: { granted, grantedBy: s.sub },
     create: { roleKey, permissionKey, granted, grantedBy: s.sub },
   });
-  await audit({ sub: s.sub, email: s.email }, granted ? "system.permission.grant" : "system.permission.revoke", "SystemRole", roleKey, { roleKey, permissionKey, next: granted });
+  await audit({ sub: s.sub, email: s.email }, granted ? "system.permission.grant" : "system.permission.revoke", "SystemRole", roleKey, { roleKey, permissionKey, prev: existing?.granted ?? false, next: granted });
   revalidatePath(`/admin/system/roles/${roleKey}`);
   revalidatePath("/admin/system/audit");
   return { ok: true };
@@ -118,6 +135,7 @@ export async function copyRolePermissions(targetRoleKey: string, sourceRoleKey: 
   const s = await requireSuperAdmin();
   if (targetRoleKey === "super_admin") return { ok: false, error: "Super Admin cannot be edited." };
   if (targetRoleKey === sourceRoleKey) return { ok: false, error: "Pick a different source role." };
+  if (sourceRoleKey === "super_admin") return { ok: false, error: "Super Admin has no stored permission grants to copy." };
   const [targetGrants, sourceGrants] = await Promise.all([
     db.rolePermission.findMany({ where: { roleKey: targetRoleKey, granted: true }, select: { permissionKey: true } }),
     db.rolePermission.findMany({ where: { roleKey: sourceRoleKey, granted: true }, select: { permissionKey: true } }),
