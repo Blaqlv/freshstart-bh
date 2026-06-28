@@ -50,6 +50,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (can(session.role, "audit:read")) nav.push({ label: "Audit log", href: "/admin/audit" });
   // Security (own MFA enrollment) is available to every signed-in staff member.
   nav.push({ label: "Security", href: "/admin/security" });
+  if (session.isSuperAdmin) nav.push({ label: "System control", href: "/admin/system" });
 
   return (
     <div className="grid min-h-screen grid-cols-1 bg-surface-alt lg:grid-cols-[260px_1fr]">
