@@ -23,15 +23,20 @@ export async function applyRoleAssignment(input: {
     return { ok: true };
   }
 
-  // custom: the role must exist, be active, and not be a built-in/system role.
-  const role = await db.systemRole.findUnique({
-    where: { key: input.key },
-    select: { isActive: true, isSystem: true },
-  });
-  if (!role || !role.isActive || role.isSystem) return { ok: false, error: "Custom role is unavailable." };
-  await db.user.update({
-    where: { id: input.userId },
-    data: { customRoleKey: input.key }, // keep the existing role enum as a fallback
-  });
-  return { ok: true };
+  if (plan.kind === "custom") {
+    // the role must exist, be active, and not be a built-in/system role.
+    const role = await db.systemRole.findUnique({
+      where: { key: input.key },
+      select: { isActive: true, isSystem: true },
+    });
+    if (!role || !role.isActive || role.isSystem) return { ok: false, error: "Custom role is unavailable." };
+    await db.user.update({
+      where: { id: input.userId },
+      data: { customRoleKey: input.key }, // keep the existing role enum as a fallback
+    });
+    return { ok: true };
+  }
+
+  // Exhaustive: RoleAssignmentPlan has no other kinds.
+  return { ok: false, error: "That role cannot be assigned." };
 }
