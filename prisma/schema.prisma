@@ -627,3 +627,99 @@ model AppointmentRequest {
   @@index([status])
   @@index([submittedAt])
 }
+
+// ---------------------------------------------------------------------------
+// Medicaid enrollment module (v2.3) — tenant-aware from the start (v4.0 ready)
+// ---------------------------------------------------------------------------
+
+model Tenant {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model MedicaidEnrollmentCase {
+  id             String    @id @default(cuid())
+  tenantId       String
+  providerName   String
+  providerNpi    String
+  caseType       String
+  status         String    @default("not_started")
+  assignedTo     String?
+  targetDeadline DateTime?
+  ohioMedicaidId String?
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  documents      EnrollmentDocument[]
+  checklistItems EnrollmentChecklistItem[]
+  mcoEnrollments McoEnrollment[]
+  auditEntries   EnrollmentAuditEntry[]
+
+  @@index([tenantId, status])
+}
+
+model EnrollmentChecklistItem {
+  id          String    @id @default(cuid())
+  tenantId    String
+  caseId      String
+  stepNumber  Int
+  title       String
+  description String
+  isRequired  Boolean   @default(true)
+  isComplete  Boolean   @default(false)
+  completedAt DateTime?
+  completedBy String?
+  notes       String?
+  case        MedicaidEnrollmentCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, caseId])
+}
+
+model EnrollmentDocument {
+  id           String     @id @default(cuid())
+  tenantId     String
+  caseId       String
+  documentType String
+  fileName     String
+  mimeType     String
+  sizeBytes    Int
+  storageKey   String?
+  scanStatus   ScanStatus @default(PENDING)
+  status       String     @default("uploaded")
+  reviewNote   String?
+  uploadedAt   DateTime   @default(now())
+  uploadedBy   String
+  case         MedicaidEnrollmentCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, caseId])
+}
+
+model McoEnrollment {
+  id          String    @id @default(cuid())
+  tenantId    String
+  caseId      String
+  mcoName     String
+  status      String    @default("not_started")
+  submittedAt DateTime?
+  approvedAt  DateTime?
+  notes       String?
+  case        MedicaidEnrollmentCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, caseId])
+}
+
+model EnrollmentAuditEntry {
+  id          String   @id @default(cuid())
+  tenantId    String
+  caseId      String
+  action      String
+  performedBy String
+  performedAt DateTime @default(now())
+  notes       String?
+  case        MedicaidEnrollmentCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, caseId])
+}

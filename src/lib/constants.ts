@@ -30,3 +30,6 @@ export const CRISIS_BANNER = CRISIS_BANNER_EN;
 export function crisisBanner(locale: string): string {
   return locale === "es" ? CRISIS_BANNER_ES : CRISIS_BANNER_EN;
 }
+
+/** Slug of the single tenant that exists today (v2.3 multi-tenant foundation). */
+export const FRESH_START_TENANT_SLUG = "fresh-start";
