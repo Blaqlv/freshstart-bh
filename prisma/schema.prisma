@@ -66,6 +66,8 @@ model User {
   active       Boolean   @default(true)
   mfaSecret    String? // populated in the MFA phase
   mfaEnabled   Boolean   @default(false)
+  isSuperAdmin  Boolean   @default(false)
+  customRoleKey String? // overrides enum-derived role key (hybrid dynamic roles)
   lastLoginAt  DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
@@ -755,4 +757,67 @@ model VerificationAttempt {
   @@index([formSubmissionId])
   @@index([intakeId])
   @@index([resultStatus, staffReviewed])
+}
+
+// ---------------------------------------------------------------------------
+// v3 Super Admin — module/role/permission registry (runtime-editable RBAC)
+// ---------------------------------------------------------------------------
+model SystemModule {
+  id          String             @id @default(cuid())
+  key         String             @unique
+  label       String
+  description String
+  isEnabled   Boolean            @default(true)
+  group       String
+  canDisable  Boolean            @default(true)
+  updatedAt   DateTime           @updatedAt
+  updatedBy   String?
+  roleAccess  ModuleRoleAccess[]
+}
+
+model ModuleRoleAccess {
+  id        String       @id @default(cuid())
+  moduleKey String
+  roleKey   String
+  canAccess Boolean      @default(true)
+  module    SystemModule @relation(fields: [moduleKey], references: [key], onDelete: Cascade)
+  role      SystemRole   @relation(fields: [roleKey], references: [key], onDelete: Cascade)
+
+  @@unique([moduleKey, roleKey])
+}
+
+model SystemRole {
+  id           String             @id @default(cuid())
+  key          String             @unique
+  label        String
+  description  String
+  isSystem     Boolean            @default(false)
+  isActive     Boolean            @default(true)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  createdBy    String?
+  permissions  RolePermission[]
+  moduleAccess ModuleRoleAccess[]
+}
+
+model Permission {
+  id              String           @id @default(cuid())
+  key             String           @unique
+  label           String
+  description     String
+  moduleKey       String
+  rolePermissions RolePermission[]
+}
+
+model RolePermission {
+  id            String     @id @default(cuid())
+  roleKey       String
+  permissionKey String
+  granted       Boolean    @default(true)
+  grantedAt     DateTime   @default(now())
+  grantedBy     String?
+  role          SystemRole @relation(fields: [roleKey], references: [key], onDelete: Cascade)
+  permission    Permission @relation(fields: [permissionKey], references: [key], onDelete: Cascade)
+
+  @@unique([roleKey, permissionKey])
 }
