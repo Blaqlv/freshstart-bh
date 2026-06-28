@@ -31,6 +31,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (can(session.role, "appointments:read") || can(session.role, "billing:manage")) {
     nav.push({ label: "Form submissions", href: "/admin/submissions" });
   }
+  if (can(session.role, "billing:manage")) {
+    nav.push({ label: "Insurance verification", href: "/admin/insurance" });
+    nav.push({ label: "Payer codes", href: "/admin/settings/payers" });
+  }
   if (can(session.role, "appointments:read")) nav.push({ label: "Patient intakes", href: "/admin/intake" });
   if (can(session.role, "patients:read")) nav.push({ label: "Patients", href: "/admin/patients" });
   if (can(session.role, "enrollment:read")) nav.push({ label: "Medicaid enrollment", href: "/admin/medicaid-enrollment" });

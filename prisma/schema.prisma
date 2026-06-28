@@ -723,3 +723,36 @@ model EnrollmentAuditEntry {
 
   @@index([tenantId, caseId])
 }
+
+// ---------------------------------------------------------------------------
+// Insurance eligibility automation (v2.2)
+// ---------------------------------------------------------------------------
+
+model InsurancePayer {
+  id        String  @id @default(cuid())
+  name      String
+  payerCode String
+  isActive  Boolean @default(true)
+
+  @@index([isActive])
+}
+
+model VerificationAttempt {
+  id               String    @id @default(cuid())
+  submittedAt      DateTime  @default(now())
+  insurerName      String
+  payerCode        String
+  resultStatus     String    // "active" | "inactive" | "unknown" | "api_error"
+  rawResponseHash  String
+  staffReviewed    Boolean   @default(false)
+  staffReviewedAt  DateTime?
+  staffReviewedBy  String?
+  source           String    // "insurance_form" | "intake"
+  formSubmissionId String?
+  intakeId         String?
+  // Never stores member ID or DOB.
+
+  @@index([formSubmissionId])
+  @@index([intakeId])
+  @@index([resultStatus, staffReviewed])
+}

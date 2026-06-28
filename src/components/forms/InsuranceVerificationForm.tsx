@@ -19,12 +19,30 @@ export function InsuranceVerificationForm() {
   const [cardName, setCardName] = useState("");
 
   if (state.ok) {
+    const e = state.eligibility;
+    if (e?.status === "active") {
+      return (
+        <div role="status" className="rounded-card border border-green-300 bg-green-50 p-6">
+          <h3 className="font-semibold text-green-900">Coverage appears active</h3>
+          <p className="mt-2 text-sm text-green-900">
+            Your coverage appears active{e.effectiveDate ? ` as of ${e.effectiveDate}` : ""}. A staff
+            member will confirm your benefits before your appointment.
+          </p>
+          {(e.copay || e.deductible) && (
+            <p className="mt-2 text-sm text-green-900">
+              {e.copay ? `Copay: ${e.copay}. ` : ""}{e.deductible ? `Deductible: ${e.deductible}.` : ""}
+            </p>
+          )}
+        </div>
+      );
+    }
     return (
-      <div role="status" className="rounded-card border border-brand bg-brand-tint p-6">
-        <h3 className="font-semibold text-brand-dark">Thank you — your request was received securely.</h3>
-        <p className="mt-2 text-sm text-ink-soft">
-          Our team will verify your benefits and follow up. Questions? Call{" "}
-          <a href="tel:+19375790073" className="font-semibold text-brand-dark">937-579-0073</a>.
+      <div role="status" className="rounded-card border border-amber-300 bg-amber-50 p-6">
+        <h3 className="font-semibold text-amber-900">We received your request</h3>
+        <p className="mt-2 text-sm text-amber-900">
+          We were unable to verify your coverage automatically. A staff member will contact you
+          within 1 business day to assist. You can also call us at{" "}
+          <a href="tel:+19375790073" className="font-semibold">937-579-0073</a>.
         </p>
       </div>
     );

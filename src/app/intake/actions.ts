@@ -1,6 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { after } from "next/server";
+import { runIntakeEligibility } from "@/lib/eligibility/intake";
 import { db } from "@/lib/db";
 import { encryptJson, decryptJson } from "@/lib/crypto";
 import { audit } from "@/lib/audit";
@@ -108,6 +110,12 @@ export async function saveStep(_prev: StepState, formData: FormData): Promise<St
     data: { dataEncrypted: encryptJson(data), currentStep: nextStep },
   });
   await audit({ sub: id, email: intake.email }, "intake.save", "IntakeSubmission", id, { step: stepIndex });
+
+  // v2.2 — when the insurance step was just saved (moving forward), run a non-blocking
+  // eligibility check AFTER the response is sent (Next after()).
+  if (!back && step?.key === "insurance") {
+    after(() => runIntakeEligibility(id));
+  }
   redirect("/intake/form");
 }
 
