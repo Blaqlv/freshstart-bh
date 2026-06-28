@@ -22,10 +22,12 @@ custom roles are currently **inert**: nothing outside the control panel consumes
 
 Make custom roles assignable and effective:
 
-1. Source the user role picker from `SystemRole` (active roles), so custom roles can be assigned.
+1. Source the user role picker from `SystemRole` (active roles), so custom roles can be assigned, with a
+   read-only summary of what access the selected role grants (§6.1).
 2. Refresh session identity from the DB per request, so a role change (or deactivation) takes effect
    on the user's **next request** — no Redis, no forced logout.
-3. Notify affected users of role changes (courtesy email).
+3. Notify affected users of role changes via a courtesy email that names the acting admin (§6.2).
+4. Let a Super Admin reassign a role's users inline when deactivating that role (§5.3).
 
 ## Non-Goals (deferred to SP4)
 
@@ -42,6 +44,18 @@ Make custom roles assignable and effective:
   a **custom** role requires **Super Admin** (UI hides custom options from non-supers; the action
   re-checks). Prevents lateral privilege escalation and keeps the custom-role lifecycle
   (create → assign → permission) within the Super-Admin boundary.
+
+## Reconciliation with the original "Prompt 3" spec
+
+The umbrella `prompt-3-super-admin-control-panel.md` specifies SP1+SP2+SP3 together; Parts 1–5 and 7
+shipped in SP1/SP2. SP3 implements its **Part 6 (User Role Assignment)** plus the deferred reassign step
+from **Part 5.3**. Intentional divergences from that prompt: live identity re-resolution **instead of the
+prompt's Redis 60s cache** (matches SP1's no-Redis foundation; effective next-request, not ≤60s); a
+**Super-Admin-only gate** on assigning *custom* roles (stricter than the prompt); a per-row dropdown on
+the `/admin/users` list (the codebase has no `/admin/users/[userId]` page); and closing the
+deactivated-user access gap (an addition). Folded-in Prompt-3 items: **6.1** read-only permission summary
+of the role being assigned, **6.2** naming the acting admin in the email, **5.3** reassigning a role's
+users when deactivating it.
 
 ---
 
@@ -81,22 +95,33 @@ Refactor `requireSession()` to re-resolve identity from the DB each request:
     status against `SystemRole` before writing.
 
 **Registry (`lib/system/registry.ts`):** add `assignableRoles()` → active `SystemRole`s **excluding
-`super_admin`**, distinguishing built-in (`isSystem: true`) from custom (`isSystem: false`).
+`super_admin`**, distinguishing built-in (`isSystem: true`) from custom (`isSystem: false`). Each entry
+carries a **permission summary** (the role's granted permission labels, resolved via
+`getEffectivePermissions` / the SP2 grants query) so the assignment UI can show what access a role grants
+**(Prompt 3 §6.1)**.
 
-**`admin/users/page.tsx`:** the per-row role `<select>` is sourced from `assignableRoles()` instead of
-the hardcoded 6-enum array. Custom-role `<option>`s render **only when the viewer is a Super Admin**
-(non-supers see built-ins only). Each row shows the user's current **effective** role label. The
-create-user form stays **built-in-only** (assign custom roles after creation).
+**Shared assignment helper (`lib/system/assign.ts`, server-only):**
+`applyRoleAssignment({ userId, key, actorIsSuperAdmin }) → Result` — the single write path used by *both*
+the user-management action and the deactivation-reassign flow. It classifies the key, enforces the
+custom-role Super-Admin gate, validates a custom key against `SystemRole` (exists/active/`isSystem:false`),
+and writes `role`/`customRoleKey` accordingly. Avoids duplicating assignment logic across two call sites.
+
+**`admin/users/page.tsx` + a small client island (`RoleAssign.tsx`):** the per-row role control is sourced
+from `assignableRoles()` instead of the hardcoded 6-enum array. A thin client island renders the `<select>`
+and, on selection, shows a **read-only summary of the chosen role's permissions** before submit
+**(§6.1)**. Custom-role options render **only when the viewer is a Super Admin** (non-supers see built-ins
+only). Each row shows the user's current **effective** role label. The create-user form stays
+**built-in-only** (assign custom roles after creation).
 
 **`admin/users/actions.ts` — `setUserRole`:**
 
 1. `requireCapability("users:manage")`; reject if `id === session.sub`.
-2. Classify the submitted key via `classifyRoleAssignment(key, { viewerIsSuperAdmin: session.isSuperAdmin })`:
-   - **reject** → no-op (`super_admin` is DB-only via the SP1 script).
-   - **builtin** → set `role = <enum>`, `customRoleKey = null`.
-   - **custom** → **re-check `session.isSuperAdmin` in the action** (defense-in-depth, not just hidden
-     UI); verify the role exists, `isActive`, and `isSystem === false`; set `customRoleKey = key`
-     (keep the existing `role` enum as a fallback for the not-yet-permission-aware nav).
+2. Read the target user's prior effective key, then delegate to `applyRoleAssignment({ userId: id,
+   key, actorIsSuperAdmin: session.isSuperAdmin })`:
+   - **reject** (`super_admin`/custom-without-super/missing custom) → no-op.
+   - **builtin** → `role = <enum>`, `customRoleKey = null`.
+   - **custom** (Super Admin only) → `customRoleKey = key` (keep the existing `role` enum as a fallback
+     for the not-yet-permission-aware nav).
 3. Audit `user.role` with `{ from: <prevEffectiveKey>, to: <newEffectiveKey> }`.
 4. Best-effort `sendEmail` to the user (never fails the action).
 5. `revalidatePath("/admin/users")`.
@@ -106,15 +131,35 @@ create-user form stays **built-in-only** (assign custom roles after creation).
 ## Section 3 — Email + audit
 
 - **Email** via existing `sendEmail({ to, subject, text, html })` (`lib/notify.ts`, returns `boolean`).
-  To the affected user: subject "Your access role has changed", body names the new role label.
-  Fire-and-forget — a `false` return or throw is swallowed so a role change never blocks on email.
+  To the affected user: subject "Your access role has changed", body names the new role label **and the
+  acting admin's name** ("…updated to *X* by *Admin Name*") **(Prompt 3 §6.2)**. Fire-and-forget — a
+  `false` return or throw is swallowed so a role change never blocks on email.
 - **Audit** extends the existing `user.role` action with `from`/`to` effective-key metadata, surfacing
   the transition in the general `/admin/audit` (a `user.*` row, consistent with where user management
   already audits — not `system.*`).
 
 ---
 
-## Section 4 — Testing
+## Section 4 — Reassign users when deactivating a role (Prompt 3 §5.3)
+
+Today SP2's `deactivateRole` **blocks** if any user holds the role ("reassign them in User Management
+first"). Since only **custom** roles can be deactivated (built-ins are protected), the affected users are
+exactly those with `customRoleKey === roleKey`. SP3 lets the Super Admin reassign them inline:
+
+- **Action (`admin/system/actions.ts`):** extend `deactivateRole(roleKey, reassignToKey?)`. When the role
+  has ≥1 user and `reassignToKey` is provided, reassign each affected user via the shared
+  `applyRoleAssignment` (target must be active, not `super_admin`, not the role being deactivated),
+  auditing each `user.role` transition, *then* set `isActive: false` and audit `system.role.deactivate`.
+  With users present and **no** target, keep the existing block. Runs under the existing
+  `requireSuperAdmin()` system-action guard, so reassigning to a custom role is inherently Super-Admin-gated.
+- **UI (`roles/RoleManager.tsx`):** when the deactivation target has a user count > 0, the confirm step
+  surfaces a **"reassign these N users to"** role `<select>` (active roles minus `super_admin` minus the
+  role itself) that must be chosen before confirming; count 0 keeps the current simple confirm. Reuses
+  the roles already passed to `RoleManager`; may extend `ConfirmDialog` or use a small purpose-built modal.
+
+---
+
+## Section 5 — Testing
 
 Pure `tsx` tests (`tests/role-assignment.mjs`), no DB:
 
@@ -135,9 +180,13 @@ drift.
 |---|---|---|
 | `src/lib/auth.ts` | Modify | `requireSession` refreshes identity from DB via cached `getCurrentUser`; inactive/missing → unauthenticated |
 | `src/lib/roles.ts` | Modify | Add pure `enumFromRoleKey` + `classifyRoleAssignment` |
-| `src/lib/system/registry.ts` | Modify | Add `assignableRoles()` (active, exclude `super_admin`, split built-in/custom) |
-| `src/app/admin/users/actions.ts` | Modify | `setUserRole` handles built-in + custom with Super-Admin gate, email, audit |
-| `src/app/admin/users/page.tsx` | Modify | Role dropdown from `assignableRoles()`; custom options Super-Admin-only; show effective role label |
+| `src/lib/system/registry.ts` | Modify | Add `assignableRoles()` (active, exclude `super_admin`, split built-in/custom, with permission summaries) |
+| `src/lib/system/assign.ts` | Create | Shared server-only `applyRoleAssignment` write path (used by user-mgmt + deactivation reassign) |
+| `src/app/admin/users/actions.ts` | Modify | `setUserRole` delegates to `applyRoleAssignment`; audit `from`/`to`; email names acting admin |
+| `src/app/admin/users/page.tsx` | Modify | Role control sourced from `assignableRoles()`; show current effective role label |
+| `src/app/admin/users/RoleAssign.tsx` | Create | Client island: role `<select>` + read-only permission summary of selected role (§6.1); custom options Super-Admin-only |
+| `src/app/admin/system/actions.ts` | Modify | `deactivateRole(roleKey, reassignToKey?)` reassigns affected users via `applyRoleAssignment` before deactivating (§5.3) |
+| `src/app/admin/system/roles/RoleManager.tsx` | Modify | Deactivation confirm gains a "reassign N users to" select when user count > 0 (§5.3) |
 | `tests/role-assignment.mjs` | Create | Pure helper unit tests |
 
 ## Done-when (SP3 acceptance)
@@ -146,7 +195,11 @@ drift.
   user's next request (verified by their resolved permissions/super-admin status).
 - A non-Super-Admin user-manager sees only built-in roles in the dropdown; submitting a custom key is
   rejected server-side.
+- The assignment UI shows a read-only summary of the selected role's permissions before submit (§6.1).
 - Deactivating a user revokes their live access on their next request (latent gap closed).
-- Each role change writes a `user.role` audit row with `from`/`to` and sends a best-effort email.
+- Deactivating a **role** that still has users offers an inline reassign-to-role step; on confirm the
+  users are reassigned (each audited) and the role is deactivated (§5.3).
+- Each role change writes a `user.role` audit row with `from`/`to` and sends a best-effort email that
+  names the acting admin (§6.2).
 - `tests/role-assignment.mjs` passes; SP1/SP2 suites still green; lint + type-check clean; build
   succeeds.
