@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { requireCapability } from "@/lib/auth";
+import { requireCapability, requireModule } from "@/lib/auth";
 import { createIncident, updateIncident } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +16,7 @@ const sevStyle: Record<string, string> = {
 };
 
 export default async function IncidentsAdmin() {
+  await requireModule("incident_reporting");
   await requireCapability("incidents:manage");
   const incidents = await db.incidentReport.findMany({ orderBy: { createdAt: "desc" } });
 
