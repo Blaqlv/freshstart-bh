@@ -5,6 +5,7 @@ import {
   locations as seedLocations,
   testimonials as seedTestimonials,
   homeServiceTiles,
+  acceptedInsurance,
 } from "../src/lib/site";
 import { seedPages } from "./seed-pages";
 
@@ -314,6 +315,20 @@ async function main() {
     },
   });
   } // end !CONTENT_ONLY
+
+  // v2.2 — seed insurance payers from the accepted-insurance list (idempotent).
+  // Placeholder payer codes (slug of the name) — staff edit them in /admin/settings/payers.
+  for (const name of acceptedInsurance) {
+    const existing = await db.insurancePayer.findFirst({ where: { name } });
+    if (!existing) {
+      await db.insurancePayer.create({
+        data: {
+          name,
+          payerCode: name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 40),
+        },
+      });
+    }
+  }
 
   console.log("Seed complete" + (CONTENT_ONLY ? " (content-only profile):" : ":"));
   console.log(`  users:        ${CONTENT_ONLY ? 1 : USERS.length}${CONTENT_ONLY ? " (Administrator only)" : ""}`);
