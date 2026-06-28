@@ -31,7 +31,7 @@ export function deriveRolePermissions(roleEnumKey: keyof typeof roleCapabilities
 
 /** Given a granted-permission set, which capabilities does it satisfy? */
 export function capabilitiesFromPermissions(granted: Set<string>): Capability[] {
-  return (Object.keys(CAPABILITY_PERMISSIONS) as Capability[]).filter((cap) =>
-    CAPABILITY_PERMISSIONS[cap].every((p) => granted.has(p)),
+  return (Object.keys(CAPABILITY_PERMISSIONS) as Capability[]).filter(
+    (cap) => CAPABILITY_PERMISSIONS[cap].length > 0 && CAPABILITY_PERMISSIONS[cap].every((p) => granted.has(p)),
   );
 }
