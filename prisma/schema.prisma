@@ -8,7 +8,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
   // Pooled Neon endpoint for the app runtime.
   url       = env("DATABASE_URL")
   // Direct (non-pooler) endpoint for migrations/introspection — PgBouncer
@@ -58,17 +58,19 @@ enum TranslationStatus {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  name         String
-  passwordHash String
-  role         Role      @default(RECEPTIONIST)
-  active       Boolean   @default(true)
-  mfaSecret    String? // populated in the MFA phase
-  mfaEnabled   Boolean   @default(false)
-  lastLoginAt  DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  passwordHash  String
+  role          Role      @default(RECEPTIONIST)
+  active        Boolean   @default(true)
+  mfaSecret     String? // populated in the MFA phase
+  mfaEnabled    Boolean   @default(false)
+  isSuperAdmin  Boolean   @default(false)
+  customRoleKey String? // overrides enum-derived role key (hybrid dynamic roles)
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   pageVersions     PageVersion[]
   blogPosts        BlogPost[]
@@ -372,7 +374,7 @@ model Patient {
   // EHR / FHIR identity linking (v2.1). The patient's FHIR Patient resource id;
   // their EHR record is fetched on demand and never persisted here.
   fhirPatientId  String?   @unique
-  fhirLinkStatus String?   // "linked" | "pending" | "unlinked"
+  fhirLinkStatus String? // "linked" | "pending" | "unlinked"
   fhirLinkedAt   DateTime?
 
   appointments Appointment[]
@@ -455,18 +457,18 @@ enum RefillStatus {
 }
 
 model RefillRequest {
-  id                  String       @id @default(cuid())
-  patientId           String
-  patient             Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  medicationEncrypted String // PHI
-  pharmacyEncrypted   String? // PHI
-  notesEncrypted      String? // PHI
+  id                   String       @id @default(cuid())
+  patientId            String
+  patient              Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  medicationEncrypted  String // PHI
+  pharmacyEncrypted    String? // PHI
+  notesEncrypted       String? // PHI
   // Set when the refill was initiated from the EHR medication list (v2.1). Holds
   // the medication display name only; not written back to the EHR in this version.
   sourceFhirMedication String?
-  status              RefillStatus @default(REQUESTED)
-  createdAt           DateTime     @default(now())
-  updatedAt           DateTime     @updatedAt
+  status               RefillStatus @default(REQUESTED)
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
 
   @@index([patientId, status])
 }
@@ -641,18 +643,18 @@ model Tenant {
 }
 
 model MedicaidEnrollmentCase {
-  id             String    @id @default(cuid())
+  id             String                    @id @default(cuid())
   tenantId       String
   providerName   String
   providerNpi    String
   caseType       String
-  status         String    @default("not_started")
+  status         String                    @default("not_started")
   assignedTo     String?
   targetDeadline DateTime?
   ohioMedicaidId String?
   notes          String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  createdAt      DateTime                  @default(now())
+  updatedAt      DateTime                  @updatedAt
   documents      EnrollmentDocument[]
   checklistItems EnrollmentChecklistItem[]
   mcoEnrollments McoEnrollment[]
@@ -662,14 +664,14 @@ model MedicaidEnrollmentCase {
 }
 
 model EnrollmentChecklistItem {
-  id          String    @id @default(cuid())
+  id          String                 @id @default(cuid())
   tenantId    String
   caseId      String
   stepNumber  Int
   title       String
   description String
-  isRequired  Boolean   @default(true)
-  isComplete  Boolean   @default(false)
+  isRequired  Boolean                @default(true)
+  isComplete  Boolean                @default(false)
   completedAt DateTime?
   completedBy String?
   notes       String?
@@ -679,7 +681,7 @@ model EnrollmentChecklistItem {
 }
 
 model EnrollmentDocument {
-  id           String     @id @default(cuid())
+  id           String                 @id @default(cuid())
   tenantId     String
   caseId       String
   documentType String
@@ -687,10 +689,10 @@ model EnrollmentDocument {
   mimeType     String
   sizeBytes    Int
   storageKey   String?
-  scanStatus   ScanStatus @default(PENDING)
-  status       String     @default("uploaded")
+  scanStatus   ScanStatus             @default(PENDING)
+  status       String                 @default("uploaded")
   reviewNote   String?
-  uploadedAt   DateTime   @default(now())
+  uploadedAt   DateTime               @default(now())
   uploadedBy   String
   case         MedicaidEnrollmentCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
 
@@ -698,11 +700,11 @@ model EnrollmentDocument {
 }
 
 model McoEnrollment {
-  id          String    @id @default(cuid())
+  id          String                 @id @default(cuid())
   tenantId    String
   caseId      String
   mcoName     String
-  status      String    @default("not_started")
+  status      String                 @default("not_started")
   submittedAt DateTime?
   approvedAt  DateTime?
   notes       String?
@@ -712,12 +714,12 @@ model McoEnrollment {
 }
 
 model EnrollmentAuditEntry {
-  id          String   @id @default(cuid())
+  id          String                 @id @default(cuid())
   tenantId    String
   caseId      String
   action      String
   performedBy String
-  performedAt DateTime @default(now())
+  performedAt DateTime               @default(now())
   notes       String?
   case        MedicaidEnrollmentCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
 
@@ -742,12 +744,12 @@ model VerificationAttempt {
   submittedAt      DateTime  @default(now())
   insurerName      String
   payerCode        String
-  resultStatus     String    // "active" | "inactive" | "unknown" | "api_error"
+  resultStatus     String // "active" | "inactive" | "unknown" | "api_error"
   rawResponseHash  String
   staffReviewed    Boolean   @default(false)
   staffReviewedAt  DateTime?
   staffReviewedBy  String?
-  source           String    // "insurance_form" | "intake"
+  source           String // "insurance_form" | "intake"
   formSubmissionId String?
   intakeId         String?
   // Never stores member ID or DOB.
@@ -755,4 +757,74 @@ model VerificationAttempt {
   @@index([formSubmissionId])
   @@index([intakeId])
   @@index([resultStatus, staffReviewed])
+}
+
+// ---------------------------------------------------------------------------
+// v3 Super Admin — module/role/permission registry (runtime-editable RBAC)
+// ---------------------------------------------------------------------------
+model SystemModule {
+  id          String             @id @default(cuid())
+  key         String             @unique
+  label       String
+  description String
+  isEnabled   Boolean            @default(true)
+  group       String
+  canDisable  Boolean            @default(true)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  updatedBy   String?
+  roleAccess  ModuleRoleAccess[]
+  permissions Permission[]
+}
+
+model ModuleRoleAccess {
+  id        String       @id @default(cuid())
+  moduleKey String
+  roleKey   String
+  canAccess Boolean      @default(true)
+  module    SystemModule @relation(fields: [moduleKey], references: [key], onDelete: Cascade)
+  role      SystemRole   @relation(fields: [roleKey], references: [key], onDelete: Cascade)
+
+  @@unique([moduleKey, roleKey])
+  @@index([roleKey])
+}
+
+model SystemRole {
+  id           String             @id @default(cuid())
+  key          String             @unique
+  label        String
+  description  String
+  isSystem     Boolean            @default(false)
+  isActive     Boolean            @default(true)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  createdBy    String?
+  permissions  RolePermission[]
+  moduleAccess ModuleRoleAccess[]
+}
+
+model Permission {
+  id              String           @id @default(cuid())
+  key             String           @unique
+  label           String
+  description     String
+  moduleKey       String
+  module          SystemModule     @relation(fields: [moduleKey], references: [key], onDelete: Cascade)
+  rolePermissions RolePermission[]
+
+  @@index([moduleKey])
+}
+
+model RolePermission {
+  id            String     @id @default(cuid())
+  roleKey       String
+  permissionKey String
+  granted       Boolean    @default(true)
+  grantedAt     DateTime   @default(now())
+  grantedBy     String?
+  role          SystemRole @relation(fields: [roleKey], references: [key], onDelete: Cascade)
+  permission    Permission @relation(fields: [permissionKey], references: [key], onDelete: Cascade)
+
+  @@unique([roleKey, permissionKey])
+  @@index([permissionKey])
 }

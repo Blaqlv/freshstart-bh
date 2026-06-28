@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireCapability } from "@/lib/auth";
+import { requireCapability, requireModule } from "@/lib/auth";
 import { can } from "@/lib/rbac";
 import { listCases, dashboardStats } from "@/lib/medicaid/cases";
 import { completionPercent, CASE_STATUSES, CASE_TYPES } from "@/lib/medicaid/constants";
@@ -11,6 +11,7 @@ export default async function MedicaidDashboard({
 }: {
   searchParams: Promise<{ status?: string; caseType?: string }>;
 }) {
+  await requireModule("medicaid_enrollment");
   const session = await requireCapability("enrollment:read");
   const sp = await searchParams;
   const [stats, cases] = await Promise.all([
