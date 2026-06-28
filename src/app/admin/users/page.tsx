@@ -2,7 +2,10 @@ import { db } from "@/lib/db";
 import { requireCapability } from "@/lib/auth";
 import { roleLabels } from "@/lib/rbac";
 import type { Role } from "@prisma/client";
-import { createUser, setUserActive, setUserRole } from "./actions";
+import { createUser, setUserActive } from "./actions";
+import { effectiveRoleKey } from "@/lib/roles";
+import { assignableRoles } from "@/lib/system/registry";
+import { RoleAssign } from "./RoleAssign";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +22,7 @@ const input = "mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm";
 export default async function UsersAdmin() {
   const session = await requireCapability("users:manage");
   const users = await db.user.findMany({ orderBy: { createdAt: "asc" } });
+  const roles = await assignableRoles();
 
   return (
     <div className="space-y-6">
@@ -62,13 +66,20 @@ export default async function UsersAdmin() {
                   <div className="text-xs text-ink-soft">{u.email}</div>
                 </td>
                 <td className="px-4 py-3">
-                  <form action={setUserRole} className="flex items-center gap-2">
-                    <input type="hidden" name="id" value={u.id} />
-                    <select name="role" aria-label={`Role for ${u.name}`} defaultValue={u.role} disabled={u.id === session.sub} className="rounded border border-line px-2 py-1 text-xs">
-                      {ROLES.map((r) => <option key={r} value={r}>{roleLabels[r]}</option>)}
-                    </select>
-                    {u.id !== session.sub && <button className="text-xs font-medium text-brand-dark hover:underline">Set</button>}
-                  </form>
+                  {(() => {
+                    const key = effectiveRoleKey(u);
+                    const label = roles.find((r) => r.key === key)?.label ?? roleLabels[u.role];
+                    return (
+                      <RoleAssign
+                        userId={u.id}
+                        currentKey={key}
+                        currentLabel={label}
+                        roles={roles}
+                        viewerIsSuperAdmin={session.isSuperAdmin}
+                        disabled={u.id === session.sub}
+                      />
+                    );
+                  })()}
                 </td>
                 <td className="px-4 py-3">
                   {u.mfaEnabled
