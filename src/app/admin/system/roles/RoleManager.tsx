@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { isBuiltInRoleKey } from "@/lib/system/helpers";
 import { createRole, updateRole, deactivateRole, restoreRole } from "../actions";
 
@@ -16,6 +15,7 @@ export function RoleManager({ roles, counts }: { roles: Role[]; counts: Record<s
   const [editing, setEditing] = useState<Role | null>(null);
   const [confirmOff, setConfirmOff] = useState<Role | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [reassignTo, setReassignTo] = useState("");
 
   const active = roles.filter((r) => r.isActive);
   const inactive = roles.filter((r) => !r.isActive);
@@ -41,9 +41,12 @@ export function RoleManager({ roles, counts }: { roles: Role[]; counts: Record<s
     router.refresh();
   }
 
-  async function onDeactivate(r: Role) {
-    const res = await deactivateRole(r.key);
-    if (!res.ok && res.error) alert(res.error);
+  async function onDeactivate(r: Role, reassignToKey?: string) {
+    setError(null);
+    const res = await deactivateRole(r.key, reassignToKey);
+    if (!res.ok) { setError(res.error ?? "Failed."); return; }
+    setConfirmOff(null);
+    setReassignTo("");
     router.refresh();
   }
 
@@ -55,7 +58,7 @@ export function RoleManager({ roles, counts }: { roles: Role[]; counts: Record<s
         </button>
       </div>
 
-      <RoleTable roles={active} counts={counts} onEdit={(r) => { setError(null); setEditing(r); }} onDeactivate={(r) => setConfirmOff(r)} />
+      <RoleTable roles={active} counts={counts} onEdit={(r) => { setError(null); setEditing(r); }} onDeactivate={(r) => { setError(null); setConfirmOff(r); }} />
 
       {inactive.length > 0 && (
         <details className="rounded-card border border-line bg-white p-4">
@@ -102,15 +105,41 @@ export function RoleManager({ roles, counts }: { roles: Role[]; counts: Record<s
         </Modal>
       )}
 
-      <ConfirmDialog
-        open={confirmOff !== null}
-        title={confirmOff ? `Deactivate ${confirmOff.label}?` : ""}
-        message="Users assigned this role will lose access. Built-in roles cannot be deactivated."
-        confirmLabel="Deactivate"
-        danger
-        onConfirm={() => confirmOff && onDeactivate(confirmOff)}
-        onClose={() => setConfirmOff(null)}
-      />
+      {confirmOff && (() => {
+        const count = counts[confirmOff.key] ?? 0;
+        const targets = active.filter((r) => r.key !== confirmOff.key && r.key !== "super_admin");
+        return (
+          <Modal title={`Deactivate ${confirmOff.label}?`} onClose={() => { setConfirmOff(null); setReassignTo(""); setError(null); }}>
+            <div className="space-y-3">
+              {count > 0 ? (
+                <>
+                  <p className="text-sm text-ink-soft">{count} user(s) hold this role. Choose a role to reassign them to before deactivating.</p>
+                  <label className="block"><span className="text-xs font-medium text-ink-soft">Reassign users to</span>
+                    <select value={reassignTo} onChange={(e) => setReassignTo(e.target.value)} className={input}>
+                      <option value="">— select a role —</option>
+                      {targets.map((r) => <option key={r.key} value={r.key}>{r.label}</option>)}
+                    </select>
+                  </label>
+                </>
+              ) : (
+                <p className="text-sm text-ink-soft">No users hold this role. Deactivating hides it from assignment; it can be restored later.</p>
+              )}
+              {error && <p className="text-xs text-red-600">{error}</p>}
+              <div className="flex justify-end gap-2">
+                <button type="button" onClick={() => { setConfirmOff(null); setReassignTo(""); setError(null); }} className="rounded-full border border-line px-4 py-2 text-sm">Cancel</button>
+                <button
+                  type="button"
+                  disabled={count > 0 && !reassignTo}
+                  onClick={() => onDeactivate(confirmOff, reassignTo || undefined)}
+                  className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  Deactivate
+                </button>
+              </div>
+            </div>
+          </Modal>
+        );
+      })()}
     </div>
   );
 }

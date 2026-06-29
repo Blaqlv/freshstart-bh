@@ -6,6 +6,7 @@ import { requireSuperAdmin } from "@/lib/auth";
 import { audit } from "@/lib/audit";
 import { effectiveRoleKey } from "@/lib/roles";
 import { slugifyRoleKey, isBuiltInRoleKey, additivePermissionDiff } from "@/lib/system/helpers";
+import { applyRoleAssignment } from "@/lib/system/assign";
 
 type Result = { ok: boolean; error?: string };
 
@@ -86,17 +87,44 @@ export async function updateRole(roleKey: string, input: { label: string; descri
   return { ok: true };
 }
 
-export async function deactivateRole(roleKey: string): Promise<Result> {
+export async function deactivateRole(roleKey: string, reassignToKey?: string): Promise<Result> {
   const s = await requireSuperAdmin();
   if (isBuiltInRoleKey(roleKey)) return { ok: false, error: "Built-in roles cannot be deactivated." };
   const role = await db.systemRole.findUnique({ where: { key: roleKey } });
   if (!role) return { ok: false, error: "Role not found." };
-  const users = await db.user.findMany({ select: { role: true, customRoleKey: true } });
-  const count = users.filter((u) => effectiveRoleKey(u) === roleKey).length;
-  if (count > 0) return { ok: false, error: `${count} user(s) hold this role — reassign them in User Management first.` };
+
+  // Only custom roles reach here, so holders carry this key via customRoleKey.
+  const affected = await db.user.findMany({
+    where: { customRoleKey: roleKey },
+    select: { id: true, role: true, customRoleKey: true },
+  });
+
+  if (affected.length > 0) {
+    if (!reassignToKey) {
+      return { ok: false, error: `${affected.length} user(s) hold this role — choose a role to reassign them to.` };
+    }
+    if (reassignToKey === roleKey || reassignToKey === "super_admin") {
+      return { ok: false, error: "Choose a different active role to reassign to." };
+    }
+    const target = await db.systemRole.findUnique({ where: { key: reassignToKey }, select: { isActive: true } });
+    if (!target?.isActive) return { ok: false, error: "Reassignment target is unavailable." };
+
+    for (const u of affected) {
+      const from = effectiveRoleKey(u);
+      const res = await applyRoleAssignment({ userId: u.id, key: reassignToKey, actorIsSuperAdmin: true });
+      if (!res.ok) return { ok: false, error: res.error ?? "Reassignment failed." };
+      await audit({ sub: s.sub, email: s.email }, "user.role", "User", u.id, { from, to: reassignToKey, reason: "role-deactivation" });
+    }
+  }
+
   await db.systemRole.update({ where: { key: roleKey }, data: { isActive: false } });
-  await audit({ sub: s.sub, email: s.email }, "system.role.deactivate", "SystemRole", roleKey, { prev: "active", next: "inactive" });
+  await audit({ sub: s.sub, email: s.email }, "system.role.deactivate", "SystemRole", roleKey, {
+    prev: "active", next: "inactive",
+    reassignedTo: affected.length ? reassignToKey : null,
+    reassignedCount: affected.length,
+  });
   revalidateSystem();
+  revalidatePath("/admin/users");
   return { ok: true };
 }
 

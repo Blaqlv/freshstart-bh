@@ -6,6 +6,9 @@ import type { Role } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requireCapability } from "@/lib/auth";
 import { audit } from "@/lib/audit";
+import { effectiveRoleKey } from "@/lib/roles";
+import { applyRoleAssignment } from "@/lib/system/assign";
+import { sendEmail } from "@/lib/notify";
 
 const ROLES: Role[] = [
   "ADMINISTRATOR",
@@ -46,9 +49,36 @@ export async function setUserActive(formData: FormData) {
 export async function setUserRole(formData: FormData) {
   const session = await requireCapability("users:manage");
   const id = String(formData.get("id"));
-  const role = String(formData.get("role") ?? "") as Role;
-  if (!ROLES.includes(role) || id === session.sub) return;
-  await db.user.update({ where: { id }, data: { role } });
-  await audit({ sub: session.sub, email: session.email }, "user.role", "User", id, { role });
+  const key = String(formData.get("role") ?? "");
+  if (!id || id === session.sub) return; // can't change your own role
+
+  const user = await db.user.findUnique({
+    where: { id },
+    select: { role: true, customRoleKey: true, email: true, name: true },
+  });
+  if (!user) return;
+  const from = effectiveRoleKey(user);
+  if (key === from) return; // no change
+
+  const res = await applyRoleAssignment({ userId: id, key, actorIsSuperAdmin: session.isSuperAdmin });
+  if (!res.ok) return; // gate/validation failure — no-op (UI only offers valid options)
+
+  await audit({ sub: session.sub, email: session.email }, "user.role", "User", id, { from, to: key });
+
+  // Best-effort courtesy email — never block the role change on email.
+  try {
+    const role = await db.systemRole.findUnique({ where: { key }, select: { label: true } });
+    await sendEmail({
+      to: user.email,
+      subject: "Your access role has changed",
+      text:
+        `Hello ${user.name},\n\n` +
+        `Your access role has been updated to "${role?.label ?? key}" by ${session.name}.\n` +
+        `If you have questions, contact your administrator.`,
+    });
+  } catch {
+    // ignore — email is a courtesy, not a gate
+  }
+
   revalidatePath("/admin/users");
 }

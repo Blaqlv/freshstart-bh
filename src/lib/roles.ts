@@ -20,3 +20,34 @@ export function roleKeyFromEnum(role: Role): string {
 export function effectiveRoleKey(user: { role: Role; customRoleKey?: string | null }): string {
   return user.customRoleKey ?? roleKeyFromEnum(user.role);
 }
+
+/** Inverse of roleKeyFromEnum: a SystemRole.key → the static Role enum, or
+ *  null for super_admin / custom / unknown keys. */
+export function enumFromRoleKey(key: string): Role | null {
+  const map: Record<string, Role> = {
+    administrator: "ADMINISTRATOR",
+    clinical_director: "CLINICAL_DIRECTOR",
+    compliance_officer: "COMPLIANCE_OFFICER",
+    receptionist: "RECEPTIONIST",
+    provider: "PROVIDER",
+    billing_staff: "BILLING_STAFF",
+  };
+  return map[key] ?? null;
+}
+
+export type RoleAssignmentPlan =
+  | { kind: "builtin"; role: Role }
+  | { kind: "custom" }
+  | { kind: "reject" };
+
+/** Decide how a submitted role key should be applied to a user. Pure — a
+ *  "custom" result still needs DB validation that the role exists & is active. */
+export function classifyRoleAssignment(
+  key: string,
+  opts: { viewerIsSuperAdmin: boolean },
+): RoleAssignmentPlan {
+  if (key === "super_admin") return { kind: "reject" }; // DB-only via the SP1 script
+  const role = enumFromRoleKey(key);
+  if (role) return { kind: "builtin", role };
+  return opts.viewerIsSuperAdmin ? { kind: "custom" } : { kind: "reject" };
+}

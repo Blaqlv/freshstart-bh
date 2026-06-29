@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 import type { Role } from "@prisma/client";
@@ -6,6 +7,8 @@ import { type Capability } from "@/lib/rbac";
 import { redirect } from "next/navigation";
 import { getEffectivePermissions, moduleIsEnabled } from "@/lib/permissions";
 import { CAPABILITY_PERMISSIONS } from "@/lib/capability-map";
+import { db } from "@/lib/db";
+import { effectiveRoleKey } from "@/lib/roles";
 
 /**
  * Lightweight admin session: a jose-signed JWT in an httpOnly cookie.
@@ -84,11 +87,33 @@ export async function getSession(): Promise<Session | null> {
   return verifySession(token);
 }
 
-/** Throws if not authenticated. Use in server components / actions. */
+/** Fresh identity for the logged-in user, memoized once per request. */
+const getCurrentUser = cache(async (sub: string) => {
+  return db.user.findUnique({
+    where: { id: sub },
+    select: {
+      id: true, email: true, name: true,
+      role: true, customRoleKey: true, active: true, isSuperAdmin: true,
+    },
+  });
+});
+
+/** Throws if not authenticated OR the user is missing/deactivated.
+ *  Re-resolves role/super-admin/active from the DB each request — the JWT's
+ *  baked claims are advisory. Use in server components / actions. */
 export async function requireSession(): Promise<Session> {
-  const s = await getSession();
-  if (!s) throw new Error("UNAUTHENTICATED");
-  return s;
+  const cookieSession = await getSession();
+  if (!cookieSession) throw new Error("UNAUTHENTICATED");
+  const user = await getCurrentUser(cookieSession.sub);
+  if (!user || !user.active) throw new Error("UNAUTHENTICATED");
+  return {
+    sub: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    roleKey: effectiveRoleKey(user),
+    isSuperAdmin: user.isSuperAdmin,
+  };
 }
 
 /** Throws if the session lacks the capability (DB-backed, live per request). */
