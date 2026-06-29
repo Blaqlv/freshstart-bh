@@ -42,15 +42,15 @@ export function buildAdminNav(input: {
 
 It returns the ordered nav. `caps` is the user's **effective** capability set (super admins get all capabilities). `role` + `isSuperAdmin` cover the two orphan items that have no capability/permission today.
 
-**Nav mapping** (faithful 1:1 of today's layout, with the two noted refinements):
+**Nav mapping** — a **faithful 1:1** of today's layout. Each gate uses the *same* capability/role check the current layout uses; the only change is the source: `caps.has(X)` (live, DB-resolved) instead of `can(session.role, X)` (static enum), and `session.role` now comes from `requireSession()` (fresh) instead of the cookie. The gates were cross-checked against each route's actual server-side guard so the nav never shows a link the route would reject (verified: the Providers/Testimonials routes guard `content:read`, not a per-feature capability; Review moderation and Public form log are role-gated, not capability-gated).
 
-| Item | Href | Gate |
+| Item | Href | Gate (unchanged from today) |
 |---|---|---|
 | Dashboard | `/admin` | always |
 | Pages | `/admin/pages` | `content:read` |
-| Providers | `/admin/providers` | `providers:write` |
-| Testimonials | `/admin/testimonials` | `testimonials:write` |
-| Review moderation | `/admin/reviews` | `testimonials:write` *(was role-array)* |
+| Providers | `/admin/providers` | `content:read` |
+| Testimonials | `/admin/testimonials` | `content:read` |
+| Review moderation | `/admin/reviews` | `role ∈ {ADMINISTRATOR, CLINICAL_DIRECTOR}` OR `isSuperAdmin` |
 | Form submissions | `/admin/submissions` | `appointments:read` OR `billing:manage` |
 | Insurance verification | `/admin/insurance` | `billing:manage` |
 | Payer codes | `/admin/settings/payers` | `billing:manage` |
@@ -68,9 +68,9 @@ It returns the ordered nav. `caps` is the user's **effective** capability set (s
 | Security | `/admin/security` | always |
 | System control | `/admin/system` | `isSuperAdmin` |
 
-**Refinements vs. today:** (a) Pages / Providers / Testimonials are gated individually rather than all under `content:read` — strictly more correct (links that show today but lead to a forbidden page disappear, e.g. a Provider's "Testimonials" link). (b) Review moderation moves from `[ADMINISTRATOR, CLINICAL_DIRECTOR]` to `testimonials:write`.
+**Why this is safe:** for the six built-in roles with all modules enabled, `capabilitiesFromPermissions(getEffectivePermissions(roleKey))` equals the role's static capability set (this is exactly the parity SP1's regression test proved for `requireCapability`). So a built-in role's nav is **byte-for-byte unchanged**; only custom-role users (who had no correct enum nav before) and module-disable behavior change.
 
-Because `getEffectivePermissions` already drops disabled-module permissions, a disabled module's capabilities fall out of `caps`, so its nav items disappear automatically — the nav is module-aware for free. The two orphan items (Public form log, Locations) are not permission-backed, so they are unaffected by module state (their modules are non-disable-able anyway).
+**Module-awareness (partial, by design):** because `getEffectivePermissions` already drops disabled-module permissions, capability-gated items whose backing module is disabled fall out of `caps` and disappear from the nav automatically. Items gated by **role** (Review moderation, Public form log, Locations) are not capability-backed and so do not auto-hide; their routes' `requireModule`/role guards still enforce access (e.g. disabling `reviews_moderation` leaves the Review moderation link visible, but `/admin/reviews`'s `requireModule` redirects on click). This cosmetic gap is accepted — see Known limitations.
 
 ### Component 2 — `admin/layout.tsx` becomes a thin caller
 
@@ -108,7 +108,7 @@ Add `await requireModule(<moduleKey>)` as the **first** guard line on every page
 
 ## Testing
 
-- **TDD — `tests/admin-nav.mjs` (pure `tsx`):** assert `buildAdminNav` produces the exact expected link set for: each built-in role's capability set (derived via `deriveRolePermissions` → `capabilitiesFromPermissions`, or hand-built cap sets), a custom-role capability subset, and `isSuperAdmin: true` (all links). Explicitly assert the two orphans appear only for the right roles, and that the Pages/Providers/Testimonials split behaves (a providers-only cap set yields Providers but not Pages/Testimonials).
+- **TDD — `tests/admin-nav.mjs` (pure `tsx`):** assert `buildAdminNav` produces the exact expected link set for: each built-in role (build its cap set with `new Set(roleCapabilities[role])` and the role enum) — asserting the hrefs match the current layout exactly (the parity guarantee); a narrow custom-role capability subset (e.g. `{patients:read}` → Dashboard + Patients + Security only); and `isSuperAdmin: true` (every link). Explicitly assert the role-gated items (Review moderation, Public form log, Locations) appear only for the right `role` values and always for `isSuperAdmin`, and that an empty cap set for a non-super yields only the always-on links (Dashboard, Security).
 - SP1/SP2/SP3 suites stay green; `tsc --noEmit` clean; lint clean for touched files (no new errors in `admin-nav.ts`, `layout.tsx`, or the wired routes); `npm run build` succeeds.
 - **Manual smoke:** (1) assign a custom role with a narrow permission set to a user; confirm their admin nav reflects exactly those links on the next request, no re-login. (2) As Super Admin, disable a module (e.g. `reviews_moderation`); confirm the Review moderation + Testimonials links vanish from a non-super's nav AND that a Super Admin deep-linking to `/admin/reviews` is redirected to `/admin/unavailable`. Re-enable and confirm restoration.
 
@@ -123,5 +123,5 @@ Add `await requireModule(<moduleKey>)` as the **first** guard line on every page
 ## Known limitations (deferred to SP5 or never)
 
 - Granular `hasPermission('module.action')` adoption at call sites (capability map remains the guard).
-- Locations / Public form log have no permission key — they stay role-gated (now on the fresh role).
+- Locations / Public form log / Review moderation have no capability/permission key — they stay role-gated (now on the fresh role). As a result they do **not** auto-hide when a related module is disabled; the route guards still enforce access. Converting them to permission keys is future work.
 - `/dashboard` (analytics) lives outside `/admin` and is not covered by this nav/layout work.
