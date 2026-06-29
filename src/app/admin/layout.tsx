@@ -22,12 +22,20 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   let session: Session;
   try {
     session = await requireSession();
-  } catch {
+  } catch (err) {
     // User went missing/inactive since the cookie was issued — let the page
     // (its own guards) handle it; render children without the admin chrome.
-    return <>{children}</>;
+    // Only swallow the expected sentinel; re-throw anything else (e.g. a DB
+    // outage) so it surfaces rather than silently degrading the admin UI.
+    if (err instanceof Error && err.message === "UNAUTHENTICATED") {
+      return <>{children}</>;
+    }
+    throw err;
   }
 
+  // Super admins bypass permission resolution and get every capability. Note
+  // this means their nav is NOT module-disabled-aware (getEffectivePermissions
+  // filters by enabled modules); requireModule still blocks them at the route.
   const caps = session.isSuperAdmin
     ? new Set(ALL_CAPABILITIES)
     : new Set(capabilitiesFromPermissions(await getEffectivePermissions(session.roleKey)));
