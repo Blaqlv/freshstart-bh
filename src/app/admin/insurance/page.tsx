@@ -1,5 +1,5 @@
 // src/app/admin/insurance/page.tsx
-import { requireCapability } from "@/lib/auth";
+import { requireCapability, requireModule } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { EligibilitySandboxBanner } from "@/components/EligibilitySandboxBanner";
 import { setReviewedAction } from "./actions";
@@ -14,6 +14,7 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export default async function InsuranceQueue() {
+  await requireModule("insurance_verification");
   await requireCapability("billing:manage");
   const attempts = await db.verificationAttempt.findMany({
     where: { source: "insurance_form" },

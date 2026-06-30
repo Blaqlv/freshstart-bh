@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
-import { requireCapability } from "@/lib/auth";
+import { requireCapability, requireModule } from "@/lib/auth";
 import { can } from "@/lib/rbac";
 import { deleteProvider, updateProvider } from "../actions";
 
@@ -11,6 +11,7 @@ const input = "mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm";
 const labelCls = "text-xs font-medium text-ink-soft";
 
 export default async function ProviderEdit({ params }: { params: Promise<{ id: string }> }) {
+  await requireModule("provider_profiles");
   const session = await requireCapability("content:read");
   const { id } = await params;
   const p = await db.provider.findUnique({ where: { id } });

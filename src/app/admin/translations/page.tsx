@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { requireCapability } from "@/lib/auth";
+import { requireCapability, requireModule } from "@/lib/auth";
 import type { TranslationStatus } from "@prisma/client";
 import { setTranslationStatus } from "./actions";
 
@@ -19,6 +19,7 @@ const ORDER: TranslationStatus[] = ["NOT_STARTED", "IN_PROGRESS", "NEEDS_REVIEW"
  * its Spanish translation status. Administrator + Clinical Director only.
  */
 export default async function TranslationsDashboard() {
+  await requireModule("multilingual");
   await requireCapability("content:publish");
   const pages = await db.page.findMany({ orderBy: { title: "asc" } });
 

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
-import { requireCapability } from "@/lib/auth";
+import { requireCapability, requireModule } from "@/lib/auth";
 import { decryptJson } from "@/lib/crypto";
 import { audit } from "@/lib/audit";
 import { INTAKE_STEPS } from "@/lib/intake";
@@ -9,6 +9,7 @@ import { INTAKE_STEPS } from "@/lib/intake";
 export const dynamic = "force-dynamic";
 
 export default async function IntakeDetail({ params }: { params: Promise<{ id: string }> }) {
+  await requireModule("intake_portal");
   const session = await requireCapability("appointments:read");
   const { id } = await params;
 

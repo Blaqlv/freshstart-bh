@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
-import { getSession } from "@/lib/auth";
-import { can } from "@/lib/rbac";
-import { roleLabels } from "@/lib/rbac";
-import { Sidebar, type NavItem } from "@/components/admin/Sidebar";
+import type { Session } from "@/lib/auth";
+import { getSession, requireSession } from "@/lib/auth";
+import { roleLabels, ALL_CAPABILITIES } from "@/lib/rbac";
+import { getEffectivePermissions } from "@/lib/permissions";
+import { capabilitiesFromPermissions } from "@/lib/capability-map";
+import { buildAdminNav } from "@/lib/admin-nav";
+import { Sidebar } from "@/components/admin/Sidebar";
 import { StatusPill } from "@/components/StatusPill";
 import { logout } from "./actions";
 
@@ -12,45 +15,31 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const session = await getSession();
-
+  const cookie = await getSession();
   // Unauthenticated: the login page renders its own full-screen UI.
-  if (!session) return <>{children}</>;
+  if (!cookie) return <>{children}</>;
 
-  const nav: NavItem[] = [{ label: "Dashboard", href: "/admin" }];
-  if (can(session.role, "content:read")) {
-    nav.push(
-      { label: "Pages", href: "/admin/pages" },
-      { label: "Providers", href: "/admin/providers" },
-      { label: "Testimonials", href: "/admin/testimonials" },
-    );
+  let session: Session;
+  try {
+    session = await requireSession();
+  } catch (err) {
+    // User went missing/inactive since the cookie was issued — let the page
+    // (its own guards) handle it; render children without the admin chrome.
+    // Only swallow the expected sentinel; re-throw anything else (e.g. a DB
+    // outage) so it surfaces rather than silently degrading the admin UI.
+    if (err instanceof Error && err.message === "UNAUTHENTICATED") {
+      return <>{children}</>;
+    }
+    throw err;
   }
-  if (["ADMINISTRATOR", "CLINICAL_DIRECTOR"].includes(session.role)) {
-    nav.push({ label: "Review moderation", href: "/admin/reviews" });
-  }
-  if (can(session.role, "appointments:read") || can(session.role, "billing:manage")) {
-    nav.push({ label: "Form submissions", href: "/admin/submissions" });
-  }
-  if (can(session.role, "billing:manage")) {
-    nav.push({ label: "Insurance verification", href: "/admin/insurance" });
-    nav.push({ label: "Payer codes", href: "/admin/settings/payers" });
-  }
-  if (can(session.role, "appointments:read")) nav.push({ label: "Patient intakes", href: "/admin/intake" });
-  if (can(session.role, "patients:read")) nav.push({ label: "Patients", href: "/admin/patients" });
-  if (can(session.role, "enrollment:read")) nav.push({ label: "Medicaid enrollment", href: "/admin/medicaid-enrollment" });
-  if (can(session.role, "forms:manage")) nav.push({ label: "Form management", href: "/admin/forms" });
-  if (can(session.role, "incidents:manage")) nav.push({ label: "Incidents", href: "/admin/incidents" });
-  if (["ADMINISTRATOR", "COMPLIANCE_OFFICER", "RECEPTIONIST"].includes(session.role)) {
-    nav.push({ label: "Public form log", href: "/admin/public-submissions" });
-  }
-  if (session.role === "ADMINISTRATOR") nav.push({ label: "Locations", href: "/admin/locations" });
-  if (can(session.role, "content:publish")) nav.push({ label: "Translations", href: "/admin/translations" });
-  if (can(session.role, "users:manage")) nav.push({ label: "Users", href: "/admin/users" });
-  if (can(session.role, "dashboard:read")) nav.push({ label: "Analytics dashboard", href: "/dashboard" });
-  if (can(session.role, "audit:read")) nav.push({ label: "Audit log", href: "/admin/audit" });
-  // Security (own MFA enrollment) is available to every signed-in staff member.
-  nav.push({ label: "Security", href: "/admin/security" });
-  if (session.isSuperAdmin) nav.push({ label: "System control", href: "/admin/system" });
+
+  // Super admins bypass permission resolution and get every capability. Note
+  // this means their nav is NOT module-disabled-aware (getEffectivePermissions
+  // filters by enabled modules); requireModule still blocks them at the route.
+  const caps = session.isSuperAdmin
+    ? new Set(ALL_CAPABILITIES)
+    : new Set(capabilitiesFromPermissions(await getEffectivePermissions(session.roleKey)));
+  const nav = buildAdminNav({ caps, role: session.role, isSuperAdmin: session.isSuperAdmin });
 
   return (
     <div className="grid min-h-screen grid-cols-1 bg-surface-alt lg:grid-cols-[260px_1fr]">

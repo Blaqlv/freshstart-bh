@@ -22,7 +22,7 @@ export type Capability =
   | "enrollment:read"
   | "enrollment:manage";
 
-const ALL: Capability[] = [
+export const ALL_CAPABILITIES: Capability[] = [
   "content:read",
   "content:write",
   "content:publish",
@@ -42,7 +42,7 @@ const ALL: Capability[] = [
 ];
 
 export const roleCapabilities: Record<Role, Capability[]> = {
-  ADMINISTRATOR: ALL,
+  ADMINISTRATOR: ALL_CAPABILITIES,
   CLINICAL_DIRECTOR: [
     "content:read",
     "content:write",

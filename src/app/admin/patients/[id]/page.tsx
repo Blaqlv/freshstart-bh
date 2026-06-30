@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
-import { requireCapability } from "@/lib/auth";
+import { requireCapability, requireModule } from "@/lib/auth";
 import { can } from "@/lib/rbac";
 import { EhrSandboxBanner } from "@/components/EhrSandboxBanner";
 import { getEhrSummary } from "@/lib/fhir/adapter";
@@ -11,6 +11,7 @@ import { linkFhirPatient, unlinkFhirPatient } from "./actions";
 export const dynamic = "force-dynamic";
 
 export default async function AdminPatientDetail({ params }: { params: Promise<{ id: string }> }) {
+  await requireModule("patient_portal");
   const session = await requireCapability("patients:read");
   const { id } = await params;
   const patient = await db.patient.findUnique({
