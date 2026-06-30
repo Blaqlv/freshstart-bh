@@ -4,6 +4,8 @@
  * blocks in the admin editor without touching code.
  */
 
+import type { BlockSpacing } from "./spacing";
+
 export type BlockType =
   | "hero"
   | "richText"
@@ -279,7 +281,7 @@ export type Block = (
   | ColumnLayoutBlock
   | VerticalSpacerBlock
   | HorizontalDividerBlock
-) & { isVisible?: boolean };
+) & { isVisible?: boolean; spaceAbove?: BlockSpacing; spaceBelow?: BlockSpacing };
 
 type BlockMeta = {
   type: BlockType;
