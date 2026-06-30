@@ -319,6 +319,65 @@ export function BlockFields({ block, onChange }: { block: Block; onChange: (patc
           <RichField label="Body" value={block.body} onChange={(v) => onChange({ body: v } as Partial<Block>)} />
         </>
       );
+    case "imageOnly":
+      return (
+        <>
+          <ImageField label="Image" value={block.image.url} onChange={(v) => onChange({ image: { ...block.image, url: v } } as Partial<Block>)} />
+          <div>
+            <Field label="Alt text (required)" value={block.image.alt} onChange={(v) => onChange({ image: { ...block.image, alt: v } } as Partial<Block>)} />
+            {!block.image.alt.trim() && (
+              <p className="mt-1 text-xs text-accent">Alt text is required for accessibility.</p>
+            )}
+          </div>
+          <Radio
+            label="Max width"
+            value={block.maxWidth ?? "full"}
+            options={[{ value: "sm", label: "Small" }, { value: "md", label: "Medium" }, { value: "lg", label: "Large" }, { value: "xl", label: "XLarge" }, { value: "full", label: "Full width" }]}
+            onChange={(v) => onChange({ maxWidth: v } as Partial<Block>)}
+          />
+          <Radio
+            label="Aspect ratio"
+            value={block.aspectRatio ?? "original"}
+            options={[{ value: "original", label: "Original" }, { value: "16/9", label: "16:9" }, { value: "4/3", label: "4:3" }, { value: "1/1", label: "1:1" }, { value: "3/2", label: "3:2" }]}
+            onChange={(v) => onChange({ aspectRatio: v } as Partial<Block>)}
+          />
+          {(block.aspectRatio ?? "original") !== "original" && (
+            <Radio
+              label="Object fit"
+              value={block.objectFit ?? "cover"}
+              options={[{ value: "cover", label: "Cover" }, { value: "contain", label: "Contain" }]}
+              onChange={(v) => onChange({ objectFit: v } as Partial<Block>)}
+            />
+          )}
+          {(block.maxWidth ?? "full") !== "full" && (
+            <Radio
+              label="Alignment"
+              value={block.align ?? "center"}
+              options={[{ value: "left", label: "Left" }, { value: "center", label: "Centre" }, { value: "right", label: "Right" }]}
+              onChange={(v) => onChange({ align: v } as Partial<Block>)}
+            />
+          )}
+          <Toggle label="Rounded corners" checked={!!block.rounded} onChange={(v) => onChange({ rounded: v } as Partial<Block>)} />
+          <Toggle
+            label="Make image a link"
+            checked={block.linkUrl !== undefined}
+            onChange={(on) =>
+              onChange({
+                linkUrl: on ? (block.linkUrl ?? "") : undefined,
+                linkOpensNewTab: on ? block.linkOpensNewTab : undefined,
+              } as Partial<Block>)
+            }
+          />
+          {block.linkUrl !== undefined && (
+            <>
+              <Field label="Link URL" value={block.linkUrl} onChange={(v) => onChange({ linkUrl: v } as Partial<Block>)} />
+              <Toggle label="Open in new tab" checked={!!block.linkOpensNewTab} onChange={(v) => onChange({ linkOpensNewTab: v } as Partial<Block>)} />
+            </>
+          )}
+          <Field label="Caption (optional)" value={block.caption ?? ""} onChange={(v) => onChange({ caption: v } as Partial<Block>)} />
+          <p className="text-xs text-ink-soft">For a richer caption with formatting, use the &quot;Image with Title Below&quot; block instead.</p>
+        </>
+      );
     case "columnLayout":
       return <ColumnLayoutFields block={block} onChange={onChange} />;
     case "verticalSpacer":
