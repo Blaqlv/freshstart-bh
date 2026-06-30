@@ -97,6 +97,8 @@ model Page {
   ogImageUrl        String?
   template          PageTemplate      @default(GENERAL)
   hasSidebar        Boolean           @default(false) // GENERAL only; SERVICE_DETAIL renders the sidebar regardless
+  // Default wrapper spacing pre-applied to NEW blocks added to this page (opt-in).
+  defaultBlockSpacing String?
   // Pointer to the version currently shown to the public
   publishedVersion  Int?
   // Spanish translation workflow status (D3).

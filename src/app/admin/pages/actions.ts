@@ -73,6 +73,8 @@ async function persistDraft(formData: FormData, pageId: string) {
         template:
           String(formData.get("template")) === "SERVICE_DETAIL" ? "SERVICE_DETAIL" : "GENERAL",
         hasSidebar: String(formData.get("hasSidebar")) === "true",
+        defaultBlockSpacing:
+          (String(formData.get("defaultBlockSpacing") ?? "") || null) as string | null,
       },
     }),
     db.pageVersion.update({ where: { id: draft.id }, data: { blocks: blocks as object } }),
