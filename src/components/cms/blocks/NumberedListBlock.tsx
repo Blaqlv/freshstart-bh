@@ -4,11 +4,11 @@ import type { NumberedListBlock as NumberedListBlockType } from "@/lib/cms/block
 
 const shapeClass = { circle: "rounded-full", square: "rounded-md" } as const;
 
-export function NumberedListBlock({ block }: { block: NumberedListBlockType }) {
+export function NumberedListBlock({ block, flush = false }: { block: NumberedListBlockType; flush?: boolean }) {
   const style = block.numberStyle ?? "circle";
   const cols = block.columns === 2 ? "sm:grid-cols-2" : "grid-cols-1";
   return (
-    <section className="py-12">
+    <section className={flush ? "py-0" : "py-12"}>
       <Container className="max-w-4xl">
         {block.title && <h2 className="text-2xl font-bold text-brand-dark">{block.title}</h2>}
         {block.intro && (

@@ -8,10 +8,10 @@ const gridByCount: Record<number, string> = {
   4: "md:grid-cols-2 lg:grid-cols-4",
 };
 
-export function RichTextColumnsBlock({ block }: { block: RichTextColumnsBlockType }) {
+export function RichTextColumnsBlock({ block, flush = false }: { block: RichTextColumnsBlockType; flush?: boolean }) {
   const grid = gridByCount[block.columns.length] ?? "md:grid-cols-2";
   return (
-    <section className="py-12">
+    <section className={flush ? "py-0" : "py-12"}>
       <Container>
         {block.heading && <h2 className="text-2xl font-bold text-brand-dark">{block.heading}</h2>}
         {block.intro && (

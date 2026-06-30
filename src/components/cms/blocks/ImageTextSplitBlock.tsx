@@ -19,14 +19,16 @@ const gridClass: Record<"left" | "right", Record<number, string>> = {
 export function ImageTextSplitBlock({
   block,
   imageSide,
+  flush = false,
 }: {
   block: ImageTextSplitFields;
   imageSide: "left" | "right";
+  flush?: boolean;
 }) {
   const isRight = imageSide === "right";
   const grid = gridClass[imageSide][block.imageWidthPercent ?? 50];
   return (
-    <section className="py-12">
+    <section className={flush ? "py-0" : "py-12"}>
       <Container className={`grid grid-cols-1 items-center gap-8 ${grid}`}>
         {/* DOM order keeps image above text on mobile; md:order swaps for desktop. */}
         <div className={isRight ? "md:order-2" : ""}>

@@ -15,12 +15,12 @@ const sizeClass: Record<"left" | "right", Record<string, string>> = {
   },
 };
 
-export function ImageTitleBesideBlock({ block }: { block: ImageTitleBesideBlockType }) {
+export function ImageTitleBesideBlock({ block, flush = false }: { block: ImageTitleBesideBlockType; flush?: boolean }) {
   const isRight = block.imagePosition === "right";
   const grid = sizeClass[block.imagePosition][block.imageSize ?? "md"];
   const align = block.verticalAlign === "center" ? "md:items-center" : "md:items-start";
   return (
-    <section className="py-12">
+    <section className={flush ? "py-0" : "py-12"}>
       <Container className={`grid grid-cols-1 gap-8 ${align} ${grid}`}>
         <div className={isRight ? "md:order-2" : ""}>
           {block.image.url && (
