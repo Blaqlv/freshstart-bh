@@ -88,6 +88,12 @@ const ImageTitleBesideThumb = () => (
   </Frame>
 );
 
+const ImageOnlyThumb = () => (
+  <Frame>
+    <rect x="10" y="12" width="60" height="32" rx="2" fill={FILL} />
+  </Frame>
+);
+
 // ── Existing blocks (lightweight) ──────────────────────────────────────────
 const HeroThumb = () => (
   <Frame>
@@ -199,6 +205,7 @@ const thumbnails: Record<BlockType, () => React.ReactElement> = {
   imageRightTextLeft: ImageRightTextLeftThumb,
   imageTitleBelow: ImageTitleBelowThumb,
   imageTitleBeside: ImageTitleBesideThumb,
+  imageOnly: ImageOnlyThumb,
   columnLayout: ColumnLayoutThumb,
   verticalSpacer: VerticalSpacerThumb,
   horizontalDivider: HorizontalDividerThumb,
