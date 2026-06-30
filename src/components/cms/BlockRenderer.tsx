@@ -11,6 +11,7 @@ import { RichTextColumnsBlock } from "./blocks/RichTextColumnsBlock";
 import { ImageTextSplitBlock } from "./blocks/ImageTextSplitBlock";
 import { ImageTitleBelowBlock } from "./blocks/ImageTitleBelowBlock";
 import { ImageTitleBesideBlock } from "./blocks/ImageTitleBesideBlock";
+import { ImageOnlyBlock } from "./blocks/ImageOnlyBlock";
 import { VerticalSpacerBlock } from "./blocks/VerticalSpacerBlock";
 import { HorizontalDividerBlock } from "./blocks/HorizontalDividerBlock";
 import { RichBody } from "./blocks/RichBody";
@@ -331,6 +332,9 @@ async function BlockView({ block, flush = false }: { block: Block; flush?: boole
 
     case "imageTitleBeside":
       return <ImageTitleBesideBlock block={block} flush={flush} />;
+
+    case "imageOnly":
+      return <ImageOnlyBlock block={block} flush={flush} />;
 
     case "verticalSpacer":
       return <VerticalSpacerBlock block={block} />;
