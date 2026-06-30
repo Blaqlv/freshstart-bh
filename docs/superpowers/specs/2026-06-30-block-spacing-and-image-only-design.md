@@ -76,8 +76,12 @@ export function spacingToPx(value: BlockSpacing | undefined): number {
 `& { isVisible?: boolean }`) to:
 
 ```ts
-& { isVisible?: boolean; spacingTop?: BlockSpacing; spacingBottom?: BlockSpacing }
+& { isVisible?: boolean; spaceAbove?: BlockSpacing; spaceBelow?: BlockSpacing }
 ```
+
+> **Field names:** `spaceAbove`/`spaceBelow`, NOT `spacingTop`/`spacingBottom`.
+> `horizontalDivider` already declares `spacingTop`/`spacingBottom` with different
+> semantics, so reusing those names on the shared intersection would collide.
 
 Both fields are **optional**. Undefined = "legacy", i.e. render as today. No JSON
 migration is required — `parseBlocks` already tolerates extra fields; existing blocks
@@ -87,6 +91,8 @@ simply lack these keys.
 
 `BlockRenderer` wraps each block in a `<div data-block-id … >`. Blocks fall into two
 classes:
+
+(Throughout, the per-block fields are `spaceAbove` / `spaceBelow`.)
 
 - **Plain blocks**: `richText`, `faqAccordion`, `serviceGrid`, `locationGrid`,
   `numberedList`, `iconList`, `imageLeftTextRight`, `imageRightTextLeft`,
