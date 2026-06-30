@@ -24,7 +24,8 @@ export type BlockType =
   | "imageTitleBeside"
   | "columnLayout"
   | "verticalSpacer"
-  | "horizontalDivider";
+  | "horizontalDivider"
+  | "imageOnly";
 
 export type BlockCategory = "text" | "images" | "layout" | "dynamic";
 
@@ -184,6 +185,19 @@ export type ImageTitleBesideBlock = {
   verticalAlign?: "top" | "center";
 };
 
+export type ImageOnlyBlock = {
+  type: "imageOnly";
+  image: { url: string; alt: string }; // alt required (enforced in the editor)
+  maxWidth?: "sm" | "md" | "lg" | "xl" | "full";
+  aspectRatio?: "16/9" | "4/3" | "1/1" | "3/2" | "original";
+  objectFit?: "cover" | "contain"; // only when aspectRatio !== "original"
+  align?: "left" | "center" | "right"; // only when maxWidth !== "full"
+  rounded?: boolean;
+  linkUrl?: string;
+  linkOpensNewTab?: boolean;
+  caption?: string; // plain text
+};
+
 // ─── Column layout (nested blocks per column) ──────────────────────────────
 
 export type ColumnSplit =
@@ -278,6 +292,7 @@ export type Block = (
   | ImageRightTextLeftBlock
   | ImageTitleBelowBlock
   | ImageTitleBesideBlock
+  | ImageOnlyBlock
   | ColumnLayoutBlock
   | VerticalSpacerBlock
   | HorizontalDividerBlock
@@ -452,6 +467,14 @@ export const blockRegistry: BlockMeta[] = [
     }),
   },
   {
+    type: "imageOnly",
+    label: "Image Only",
+    description:
+      "A single standalone image with no title or text — ideal for visual breaks between sections.",
+    category: "images",
+    create: () => ({ type: "imageOnly", image: { url: "", alt: "" }, maxWidth: "full", aspectRatio: "original" }),
+  },
+  {
     type: "columnLayout",
     label: "Column Layout",
     description: "Split content into side-by-side columns with configurable width ratios.",
@@ -542,6 +565,9 @@ export function blockPreview(block: Block): string {
       break;
     case "imageTitleBelow":
       raw = block.title || block.caption || "";
+      break;
+    case "imageOnly":
+      raw = block.image.alt || block.caption || "Image";
       break;
     case "columnLayout": {
       const count = block.columns.length;
