@@ -25,7 +25,9 @@ export const spacingLabelMap: Record<BlockSpacing, string> = {
 };
 
 export function spacingToPx(value: BlockSpacing | undefined): number {
-  return value ? spacingPxMap[value] : 0;
+  // `?? 0` hardens against an out-of-enum value reaching the renderer (e.g. a
+  // tampered block JSON): unknown → 0px rather than `undefined` padding.
+  return value ? (spacingPxMap[value] ?? 0) : 0;
 }
 
 /** Blocks that own a colored background — keep their internal padding, never flush. */

@@ -115,7 +115,7 @@ export function PageEditor({
   }
   function updateBlockSpacing(
     id: string,
-    patch: { spaceAbove?: import("@/lib/cms/spacing").BlockSpacing; spaceBelow?: import("@/lib/cms/spacing").BlockSpacing },
+    patch: { spaceAbove?: BlockSpacing; spaceBelow?: BlockSpacing },
   ) {
     setItems((arr) =>
       arr.map((it) => (it.id === id ? { ...it, block: { ...it.block, ...patch } as Block } : it)),
