@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { requireSession } from "@/lib/auth";
+import { requireSession, requireModule } from "@/lib/auth";
 import { allowedFormKeys, formKeyLabels } from "@/lib/submissions";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +13,7 @@ const statusStyles: Record<string, string> = {
 };
 
 export default async function SubmissionsQueue() {
+  await requireModule("appointment_requests");
   const session = await requireSession();
   const keys = allowedFormKeys(session.role);
 

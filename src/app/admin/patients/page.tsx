@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { requireCapability } from "@/lib/auth";
+import { requireCapability, requireModule } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPatients() {
+  await requireModule("patient_portal");
   await requireCapability("patients:read");
   const patients = await db.patient.findMany({
     orderBy: { createdAt: "desc" },

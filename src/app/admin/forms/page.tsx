@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { requireCapability } from "@/lib/auth";
+import { requireCapability, requireModule } from "@/lib/auth";
 import { updateForm } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -7,6 +7,7 @@ export const dynamic = "force-dynamic";
 const input = "mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm";
 
 export default async function FormsAdmin() {
+  await requireModule("appointment_requests");
   await requireCapability("forms:manage");
   const forms = await db.formDefinition.findMany({ orderBy: { createdAt: "asc" } });
 

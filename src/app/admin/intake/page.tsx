@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { requireCapability } from "@/lib/auth";
+import { requireCapability, requireModule } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +10,7 @@ const statusStyles: Record<string, string> = {
 };
 
 export default async function IntakeQueue() {
+  await requireModule("intake_portal");
   // Front-desk / admin triage. Same capability that guards appointment requests.
   await requireCapability("appointments:read");
   const intakes = await db.intakeSubmission.findMany({

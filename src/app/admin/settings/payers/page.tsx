@@ -1,5 +1,5 @@
 // src/app/admin/settings/payers/page.tsx
-import { requireCapability } from "@/lib/auth";
+import { requireCapability, requireModule } from "@/lib/auth";
 import { listAllPayers } from "@/lib/insurance/payers";
 import { EligibilitySandboxBanner } from "@/components/EligibilitySandboxBanner";
 import { savePayerAction, addPayerAction } from "./actions";
@@ -7,6 +7,7 @@ import { savePayerAction, addPayerAction } from "./actions";
 export const dynamic = "force-dynamic";
 
 export default async function PayersSettings() {
+  await requireModule("insurance_verification");
   await requireCapability("billing:manage");
   const payers = await listAllPayers();
   return (

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { requireSession } from "@/lib/auth";
+import { requireSession, requireModule } from "@/lib/auth";
 import { approveReview, editAndApproveReview, rejectReview } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -11,6 +11,7 @@ export const dynamic = "force-dynamic";
  * approved (the original text is preserved in the audit log).
  */
 export default async function ReviewModeration() {
+  await requireModule("reviews_moderation");
   const session = await requireSession();
   if (session.role !== "ADMINISTRATOR" && session.role !== "CLINICAL_DIRECTOR") {
     redirect("/forbidden");

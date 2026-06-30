@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
-import { requireSession } from "@/lib/auth";
+import { requireSession, requireModule } from "@/lib/auth";
 import { decryptJson } from "@/lib/crypto";
 import { audit } from "@/lib/audit";
 import { allowedFormKeys, formKeyLabels } from "@/lib/submissions";
@@ -25,6 +25,7 @@ const fieldLabels: Record<string, string> = {
 };
 
 export default async function SubmissionDetail({ params }: { params: Promise<{ id: string }> }) {
+  await requireModule("appointment_requests");
   const session = await requireSession();
   const { id } = await params;
 

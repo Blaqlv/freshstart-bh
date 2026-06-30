@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { requireCapability } from "@/lib/auth";
+import { requireCapability, requireModule } from "@/lib/auth";
 import { can } from "@/lib/rbac";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { createTestimonial, deleteTestimonial, toggleTestimonial } from "./actions";
@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 const input = "mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm";
 
 export default async function TestimonialsAdmin() {
+  await requireModule("reviews_moderation");
   const session = await requireCapability("content:read");
   const canWrite = can(session.role, "testimonials:write");
   const items = await db.testimonial.findMany({ orderBy: [{ status: "asc" }, { createdAt: "desc" }] });

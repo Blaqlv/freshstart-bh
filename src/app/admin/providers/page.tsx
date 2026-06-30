@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { requireCapability } from "@/lib/auth";
+import { requireCapability, requireModule } from "@/lib/auth";
 import { can } from "@/lib/rbac";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { createProvider } from "./actions";
@@ -8,6 +8,7 @@ import { createProvider } from "./actions";
 export const dynamic = "force-dynamic";
 
 export default async function ProvidersAdmin() {
+  await requireModule("provider_profiles");
   const session = await requireCapability("content:read");
   const canWrite = can(session.role, "providers:write");
   const providers = await db.provider.findMany({ orderBy: { order: "asc" } });
