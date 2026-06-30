@@ -107,6 +107,18 @@ export function PageEditor({
       ),
     );
   }
+  function updateBlockSpacing(
+    id: string,
+    patch: { spaceAbove?: import("@/lib/cms/spacing").BlockSpacing; spaceBelow?: import("@/lib/cms/spacing").BlockSpacing },
+  ) {
+    setItems((arr) =>
+      arr.map((it) => (it.id === id ? { ...it, block: { ...it.block, ...patch } as Block } : it)),
+    );
+    dirtyRef.current = true;
+    setTimeout(() => {
+      void autosave();
+    }, 0);
+  }
   function onDragEnd(e: DragEndEvent) {
     const { active, over } = e;
     if (!over || active.id === over.id) return;
@@ -307,6 +319,7 @@ export function PageEditor({
                       onDuplicate={() => duplicateBlock(it.id)}
                       onToggleVisible={() => toggleVisible(it.id)}
                       onDelete={() => removeBlock(it.id)}
+                      onSpacingChange={(patch) => updateBlockSpacing(it.id, patch)}
                     />
                   </div>
                 ))}
