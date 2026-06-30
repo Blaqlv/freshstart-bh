@@ -30,6 +30,8 @@ import { Radio, Toggle } from "./BlockFields";
 import { BlockCard } from "./BlockCard";
 import { BlockEditorPanel } from "./BlockEditorPanel";
 import { BlockPicker } from "./BlockPicker";
+import { SegmentedControl } from "./controls";
+import type { BlockSpacing } from "@/lib/cms/spacing";
 
 type PageData = {
   id: string;
@@ -42,6 +44,7 @@ type PageData = {
   ogImageUrl: string;
   template: PageTemplate;
   hasSidebar: boolean;
+  defaultBlockSpacing: string;
 };
 
 const input = "mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm focus:border-brand-dark";
@@ -71,6 +74,9 @@ export function PageEditor({
   const [title, setTitle] = useState(page.title);
   const [template, setTemplate] = useState<PageTemplate>(page.template);
   const [hasSidebar, setHasSidebar] = useState(page.hasSidebar);
+  const [defaultBlockSpacing, setDefaultBlockSpacing] = useState<BlockSpacing | "">(
+    (page.defaultBlockSpacing as BlockSpacing | "") ?? "",
+  );
   const [editingId, setEditingId] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [insertAt, setInsertAt] = useState<number | null>(null);
@@ -107,6 +113,18 @@ export function PageEditor({
       ),
     );
   }
+  function updateBlockSpacing(
+    id: string,
+    patch: { spaceAbove?: BlockSpacing; spaceBelow?: BlockSpacing },
+  ) {
+    setItems((arr) =>
+      arr.map((it) => (it.id === id ? { ...it, block: { ...it.block, ...patch } as Block } : it)),
+    );
+    dirtyRef.current = true;
+    setTimeout(() => {
+      void autosave();
+    }, 0);
+  }
   function onDragEnd(e: DragEndEvent) {
     const { active, over } = e;
     if (!over || active.id === over.id) return;
@@ -128,7 +146,14 @@ export function PageEditor({
   function handlePick(type: BlockType) {
     const meta = blockRegistry.find((m) => m.type === type);
     if (!meta) return;
-    const item: Item = { id: makeId(), block: meta.create() };
+    const base = meta.create();
+    // Pre-apply the page's default spacing to new blocks (spacer/divider manage
+    // their own spacing, so they are skipped).
+    const block: Block =
+      defaultBlockSpacing && type !== "verticalSpacer" && type !== "horizontalDivider"
+        ? ({ ...base, spaceAbove: defaultBlockSpacing, spaceBelow: defaultBlockSpacing } as Block)
+        : base;
+    const item: Item = { id: makeId(), block };
     setItems((arr) => {
       const at = insertAt ?? arr.length;
       return [...arr.slice(0, at), item, ...arr.slice(at)];
@@ -158,7 +183,7 @@ export function PageEditor({
       return;
     }
     dirtyRef.current = true;
-  }, [items, title, template, hasSidebar]);
+  }, [items, title, template, hasSidebar, defaultBlockSpacing]);
 
   const autosave = useCallback(async () => {
     if (savingRef.current || !dirtyRef.current || !formRef.current) return;
@@ -195,6 +220,7 @@ export function PageEditor({
       <input type="hidden" name="blocks" value={JSON.stringify(items.map((it) => it.block))} />
       <input type="hidden" name="template" value={template} />
       <input type="hidden" name="hasSidebar" value={String(hasSidebar)} />
+      <input type="hidden" name="defaultBlockSpacing" value={defaultBlockSpacing} />
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
@@ -261,6 +287,20 @@ export function PageEditor({
             onChange={setHasSidebar}
           />
         )}
+        <SegmentedControl
+          label="Default spacing for new blocks"
+          value={defaultBlockSpacing}
+          options={[
+            { value: "", label: "Off" },
+            { value: "xs", label: "XS" },
+            { value: "sm", label: "SM" },
+            { value: "md", label: "MD" },
+            { value: "lg", label: "LG" },
+            { value: "xl", label: "XL" },
+            { value: "xxl", label: "XXL" },
+          ]}
+          onChange={(v) => setDefaultBlockSpacing(v as BlockSpacing | "")}
+        />
       </div>
 
       {/* Blocks */}
@@ -307,6 +347,7 @@ export function PageEditor({
                       onDuplicate={() => duplicateBlock(it.id)}
                       onToggleVisible={() => toggleVisible(it.id)}
                       onDelete={() => removeBlock(it.id)}
+                      onSpacingChange={(patch) => updateBlockSpacing(it.id, patch)}
                     />
                   </div>
                 ))}

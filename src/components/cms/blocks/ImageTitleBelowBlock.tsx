@@ -16,9 +16,9 @@ const maxWidthClass: Record<string, string> = {
   full: "max-w-none",
 };
 
-export function ImageTitleBelowBlock({ block }: { block: ImageTitleBelowBlockType }) {
+export function ImageTitleBelowBlock({ block, flush = false }: { block: ImageTitleBelowBlockType; flush?: boolean }) {
   return (
-    <section className="py-12">
+    <section className={flush ? "py-0" : "py-12"}>
       <Container className={maxWidthClass[block.maxWidth ?? "lg"]}>
         {block.image.url && (
           <img

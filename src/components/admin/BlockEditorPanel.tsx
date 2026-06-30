@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { SlideOver } from "./SlideOver";
 import { BlockFields } from "./BlockFields";
+import { SpacingControls } from "./SpacingControls";
 import { type Block, blockLabel } from "@/lib/cms/blocks";
 
 export function BlockEditorPanel({
@@ -15,6 +16,7 @@ export function BlockEditorPanel({
   onCancel: () => void;
 }) {
   const [draft, setDraft] = useState<Block>(block);
+  const showSpacing = draft.type !== "verticalSpacer" && draft.type !== "horizontalDivider";
 
   return (
     <SlideOver open onClose={onCancel} title={`Edit ${blockLabel(draft.type)}`}>
@@ -23,6 +25,20 @@ export function BlockEditorPanel({
           block={draft}
           onChange={(patch) => setDraft((d) => ({ ...d, ...patch }) as Block)}
         />
+        {showSpacing && (
+          <details className="rounded-lg border border-line p-3">
+            <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-ink-soft">
+              Spacing
+            </summary>
+            <div className="mt-3">
+              <SpacingControls
+                spaceAbove={draft.spaceAbove}
+                spaceBelow={draft.spaceBelow}
+                onChange={(patch) => setDraft((d) => ({ ...d, ...patch }) as Block)}
+              />
+            </div>
+          </details>
+        )}
       </div>
       <div className="mt-6 flex justify-end gap-2 border-t border-line pt-4">
         <button

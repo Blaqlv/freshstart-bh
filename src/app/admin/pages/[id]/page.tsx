@@ -39,6 +39,7 @@ export default async function EditPage({ params }: { params: Promise<{ id: strin
           ogImageUrl: page.ogImageUrl ?? "",
           template: page.template,
           hasSidebar: page.hasSidebar,
+          defaultBlockSpacing: page.defaultBlockSpacing ?? "",
         }}
         initialBlocks={blocks}
         canPublish={canPublish}

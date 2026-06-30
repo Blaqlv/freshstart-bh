@@ -4,15 +4,20 @@ import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import type { Block, BlockBackground, ColumnSplit } from "@/lib/cms/blocks";
 import { resolveBackground } from "@/lib/cms/background";
+import { resolveBlockSpacing } from "@/lib/cms/spacing";
 import { NumberedListBlock } from "./blocks/NumberedListBlock";
 import { IconListBlock } from "./blocks/IconListBlock";
 import { RichTextColumnsBlock } from "./blocks/RichTextColumnsBlock";
 import { ImageTextSplitBlock } from "./blocks/ImageTextSplitBlock";
 import { ImageTitleBelowBlock } from "./blocks/ImageTitleBelowBlock";
 import { ImageTitleBesideBlock } from "./blocks/ImageTitleBesideBlock";
+import { ImageOnlyBlock } from "./blocks/ImageOnlyBlock";
 import { VerticalSpacerBlock } from "./blocks/VerticalSpacerBlock";
 import { HorizontalDividerBlock } from "./blocks/HorizontalDividerBlock";
 import { RichBody } from "./blocks/RichBody";
+
+/** Plain blocks drop their own outer vertical padding when the wrapper manages it. */
+const vpad = (flush: boolean, base: string) => (flush ? "py-0" : base);
 
 const heroHeightMap: Record<string, string> = {
   sm: "min-h-[300px]",
@@ -83,14 +88,26 @@ export async function BlockRenderer({ blocks }: { blocks: Block[] }) {
     <>
       {blocks
         .filter((block) => block.isVisible !== false)
-        .map((block, i) => (
-          <BlockView key={i} block={block} />
-        ))}
+        .map((block, i) => {
+          const sp = resolveBlockSpacing(block);
+          return (
+            <div
+              key={i}
+              data-block-type={block.type}
+              style={{
+                paddingTop: sp.paddingTop || undefined,
+                paddingBottom: sp.paddingBottom || undefined,
+              }}
+            >
+              <BlockView block={block} flush={sp.flush} />
+            </div>
+          );
+        })}
     </>
   );
 }
 
-async function BlockView({ block }: { block: Block }) {
+async function BlockView({ block, flush = false }: { block: Block; flush?: boolean }) {
   switch (block.type) {
     case "hero": {
       const bg = block.background;
@@ -127,7 +144,7 @@ async function BlockView({ block }: { block: Block }) {
 
     case "richText":
       return (
-        <section className="py-12">
+        <section className={vpad(flush, "py-12")}>
           <Container className="max-w-3xl">
             {block.heading && <h2 className="text-2xl font-bold text-brand-dark">{block.heading}</h2>}
             <RichBody text={block.body} className="mt-3 space-y-4 text-ink-soft" />
@@ -180,7 +197,7 @@ async function BlockView({ block }: { block: Block }) {
 
     case "faqAccordion":
       return (
-        <section className="py-12">
+        <section className={vpad(flush, "py-12")}>
           <Container className="max-w-3xl">
             {block.heading && <h2 className="text-2xl font-bold text-brand-dark">{block.heading}</h2>}
             <div className="mt-4 divide-y divide-line rounded-card border border-line">
@@ -207,7 +224,7 @@ async function BlockView({ block }: { block: Block }) {
         orderBy: { order: "asc" },
       });
       return (
-        <section className="py-12">
+        <section className={vpad(flush, "py-12")}>
           <Container>
             {block.heading && <h2 className="text-2xl font-bold text-brand-dark">{block.heading}</h2>}
             <ul className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -257,7 +274,7 @@ async function BlockView({ block }: { block: Block }) {
         orderBy: { order: "asc" },
       });
       return (
-        <section className="py-12">
+        <section className={vpad(flush, "py-12")}>
           <Container>
             {block.heading && <h2 className="text-2xl font-bold text-brand-dark">{block.heading}</h2>}
             <ul className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -296,25 +313,28 @@ async function BlockView({ block }: { block: Block }) {
     }
 
     case "numberedList":
-      return <NumberedListBlock block={block} />;
+      return <NumberedListBlock block={block} flush={flush} />;
 
     case "iconList":
-      return <IconListBlock block={block} />;
+      return <IconListBlock block={block} flush={flush} />;
 
     case "richTextColumns":
-      return <RichTextColumnsBlock block={block} />;
+      return <RichTextColumnsBlock block={block} flush={flush} />;
 
     case "imageLeftTextRight":
-      return <ImageTextSplitBlock block={block} imageSide="left" />;
+      return <ImageTextSplitBlock block={block} imageSide="left" flush={flush} />;
 
     case "imageRightTextLeft":
-      return <ImageTextSplitBlock block={block} imageSide="right" />;
+      return <ImageTextSplitBlock block={block} imageSide="right" flush={flush} />;
 
     case "imageTitleBelow":
-      return <ImageTitleBelowBlock block={block} />;
+      return <ImageTitleBelowBlock block={block} flush={flush} />;
 
     case "imageTitleBeside":
-      return <ImageTitleBesideBlock block={block} />;
+      return <ImageTitleBesideBlock block={block} flush={flush} />;
+
+    case "imageOnly":
+      return <ImageOnlyBlock block={block} flush={flush} />;
 
     case "verticalSpacer":
       return <VerticalSpacerBlock block={block} />;
@@ -346,7 +366,7 @@ async function BlockView({ block }: { block: Block }) {
       if (!stack) {
         // Side-by-side at every width — explicit template, no responsive stacking.
         return (
-          <Container className="py-8">
+          <Container className={vpad(flush, "py-8")}>
             <div
               style={{
                 display: "grid",
@@ -366,7 +386,7 @@ async function BlockView({ block }: { block: Block }) {
         : `grid grid-cols-1 ${layout.grid} ${gap} ${valign}`;
 
       return (
-        <Container className="py-8">
+        <Container className={vpad(flush, "py-8")}>
           <div className={wrapperClass}>{columns.map(renderColumn)}</div>
         </Container>
       );

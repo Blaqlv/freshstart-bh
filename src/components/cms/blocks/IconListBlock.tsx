@@ -9,10 +9,10 @@ const colClass = {
   3: "sm:grid-cols-2 lg:grid-cols-3",
 } as const;
 
-export function IconListBlock({ block }: { block: IconListBlockType }) {
+export function IconListBlock({ block, flush = false }: { block: IconListBlockType; flush?: boolean }) {
   const cols = colClass[block.columns ?? 1];
   return (
-    <section className="py-12">
+    <section className={flush ? "py-0" : "py-12"}>
       <Container>
         {block.title && <h2 className="text-2xl font-bold text-brand-dark">{block.title}</h2>}
         {block.intro && (

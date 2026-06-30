@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Pencil, Copy, Eye, EyeOff, Trash2 } from "lucide-react";
+import { GripVertical, Pencil, Copy, Eye, EyeOff, Trash2, ArrowUpDown } from "lucide-react";
 import { type Block, blockLabel, blockPreview } from "@/lib/cms/blocks";
+import { SpacingControls } from "./SpacingControls";
+import type { BlockSpacing } from "@/lib/cms/spacing";
 
 export function BlockCard({
   id,
@@ -13,6 +15,7 @@ export function BlockCard({
   onDuplicate,
   onToggleVisible,
   onDelete,
+  onSpacingChange,
 }: {
   id: string;
   block: Block;
@@ -20,8 +23,11 @@ export function BlockCard({
   onDuplicate: () => void;
   onToggleVisible: () => void;
   onDelete: () => void;
+  onSpacingChange: (patch: { spaceAbove?: BlockSpacing; spaceBelow?: BlockSpacing }) => void;
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [spacingOpen, setSpacingOpen] = useState(false);
+  const showSpacing = block.type !== "verticalSpacer" && block.type !== "horizontalDivider";
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
   });
@@ -66,6 +72,28 @@ export function BlockCard({
         </div>
 
         <div className="flex items-center gap-1">
+          {showSpacing && (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setSpacingOpen((o) => !o)}
+                aria-label="Adjust spacing"
+                aria-expanded={spacingOpen}
+                className={iconBtn}
+              >
+                <ArrowUpDown className="h-4 w-4" />
+              </button>
+              {spacingOpen && (
+                <div className="absolute right-0 z-20 mt-1 w-64 rounded-card border border-line bg-white p-3 shadow-lg">
+                  <SpacingControls
+                    spaceAbove={block.spaceAbove}
+                    spaceBelow={block.spaceBelow}
+                    onChange={onSpacingChange}
+                  />
+                </div>
+              )}
+            </div>
+          )}
           <button type="button" onClick={onEdit} aria-label="Edit block" className={iconBtn}>
             <Pencil className="h-4 w-4" />
           </button>
