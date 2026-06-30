@@ -43,6 +43,14 @@ assert.deepStrictEqual(
   "columnLayout legacy 32",
 );
 
+// explicit "none" is an opt-in signal, distinct from unset: the block goes flush
+// with 0px wrapper padding (NOT the legacy passthrough). Pins the renderer boundary.
+assert.deepStrictEqual(
+  resolveBlockSpacing({ type: "richText", spaceAbove: "none", spaceBelow: "none" }),
+  { managed: true, flush: true, paddingTop: 0, paddingBottom: 0 },
+  "explicit none opts in (flush=true, pad=0)",
+);
+
 // banded -> never flush; wrapper only external gap
 assert.deepStrictEqual(
   resolveBlockSpacing({ type: "testimonialCarousel" }),
