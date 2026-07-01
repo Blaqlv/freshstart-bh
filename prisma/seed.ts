@@ -10,6 +10,7 @@ import {
 import { seedPages } from "./seed-pages";
 import { seedSystem } from "./seeds";
 import { seedServices } from "./seeds/services";
+import { seedNavigation } from "./seeds/navigation";
 
 // Default to the standard engine. Set SEED_DRIVER=neon to seed over Neon's HTTP
 // driver instead (useful when the local Prisma query engine can't open a direct
@@ -344,6 +345,7 @@ async function main() {
 
   // Task 2 — enrich services with excerpt, iconName, sortOrder, isActive.
   await seedServices();
+  await seedNavigation();
 
   console.log("Seed complete" + (CONTENT_ONLY ? " (content-only profile):" : ":"));
   console.log(`  users:        ${CONTENT_ONLY ? 1 : USERS.length}${CONTENT_ONLY ? " (Administrator only)" : ""}`);

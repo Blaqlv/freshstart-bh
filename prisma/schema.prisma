@@ -57,6 +57,12 @@ enum TranslationStatus {
   APPROVED
 }
 
+enum NavPlacement {
+  TOP_NAV
+  FOOTER
+  UTILITY_BAR
+}
+
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
@@ -106,8 +112,9 @@ model Page {
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
-  versions PageVersion[]
-  service  Service?
+  versions        PageVersion[]
+  service         Service?
+  navigationItems NavigationItem[]
 
   @@index([status])
 }
@@ -211,9 +218,10 @@ model Service {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
-  page            Page?         @relation(fields: [pageId], references: [id])
+  page            Page?            @relation(fields: [pageId], references: [id])
   relatedServices RelatedService[] @relation("PrimaryService")
   relatedTo       RelatedService[] @relation("RelatedService")
+  navigationItems NavigationItem[]
 
   @@index([isActive, sortOrder])
 }
@@ -855,4 +863,33 @@ model RolePermission {
 
   @@unique([roleKey, permissionKey])
   @@index([permissionKey])
+}
+
+// ---------------------------------------------------------------------------
+// Navigation Builder (Prompt 12) — DB-driven nav replacing lib/site.ts hardcode
+// ---------------------------------------------------------------------------
+
+model NavigationItem {
+  id                 String        @id @default(cuid())
+  label              String
+  href               String?
+  pageId             String?
+  serviceId          String?
+  target             String        @default("_self")
+  iconName           String?
+  placement          NavPlacement
+  footerColumn       Int?
+  parentId           String?
+  sortOrder          Int           @default(0)
+  isVisible          Boolean       @default(true)
+  autoExpandServices Boolean       @default(false)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  page     Page?            @relation(fields: [pageId], references: [id], onDelete: SetNull)
+  service  Service?         @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  parent   NavigationItem?  @relation("NavChildren", fields: [parentId], references: [id], onDelete: SetNull)
+  children NavigationItem[] @relation("NavChildren")
+
+  @@index([placement, sortOrder])
 }
