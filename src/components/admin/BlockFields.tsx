@@ -19,6 +19,7 @@ import { IconPicker } from "./IconPicker";
 import { SegmentedControl, ColorField } from "./controls";
 import { BackgroundEditor } from "./BackgroundEditor";
 import { ColumnSplitPreview } from "./ColumnSplitPreview";
+import { ServiceSlugPicker } from "./ServiceSlugPicker";
 
 const input = "mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm focus:border-brand-dark";
 const labelCls = "block text-xs font-medium text-ink-soft";
@@ -148,11 +149,17 @@ export function BlockFields({ block, onChange }: { block: Block; onChange: (patc
       return (
         <>
           <Field label="Heading" value={block.heading ?? ""} onChange={(v) => onChange({ heading: v } as Partial<Block>)} />
-          <Field
-            label="Service slugs (comma-separated; blank = all published)"
-            value={(block.slugs ?? []).join(", ")}
-            onChange={(v) => onChange({ slugs: v.split(",").map((s) => s.trim()).filter(Boolean) } as Partial<Block>)}
-          />
+          <div>
+            <span className={labelCls}>Services (empty = show all published)</span>
+            <div className="mt-1">
+              <ServiceSlugPicker
+                value={block.slugs ?? []}
+                onChange={(slugs) => onChange({ slugs } as Partial<Block>)}
+                max={6}
+              />
+            </div>
+            <p className="mt-1 text-xs text-ink-soft">Select up to 6, or leave empty to show all active services.</p>
+          </div>
         </>
       );
     case "testimonialCarousel":

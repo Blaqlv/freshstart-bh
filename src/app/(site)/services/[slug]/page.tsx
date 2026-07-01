@@ -7,13 +7,24 @@ import { Button } from "@/components/ui/Button";
 import { acceptedInsurance, site } from "@/lib/site";
 import { JsonLd } from "@/components/JsonLd";
 import { serviceSchema } from "@/lib/jsonld";
+import { BlockRenderer } from "@/components/cms/BlockRenderer";
+import { parseBlocks } from "@/lib/cms/blocks";
 
 export const dynamic = "force-dynamic";
 
 type Faq = { q: string; a: string };
 
 async function getService(slug: string) {
-  return db.service.findFirst({ where: { slug, status: "PUBLISHED" } });
+  return db.service.findFirst({
+    where: { slug, status: "PUBLISHED" },
+    include: {
+      page: {
+        include: {
+          versions: { orderBy: { version: "desc" }, take: 1, where: { status: "PUBLISHED" } },
+        },
+      },
+    },
+  });
 }
 
 export async function generateMetadata({
@@ -31,6 +42,13 @@ export default async function ServiceDetail({ params }: { params: Promise<{ slug
   const { slug } = await params;
   const service = await getService(slug);
   if (!service) notFound();
+
+  // If a published CMS page is linked, render its blocks
+  const publishedVersion = service.page?.versions?.[0];
+  if (service.pageId && publishedVersion) {
+    const blocks = parseBlocks(publishedVersion.blocks);
+    return <BlockRenderer blocks={blocks} />;
+  }
 
   const faqs = (Array.isArray(service.faqs) ? service.faqs : []) as unknown as Faq[];
   const related = await db.service.findMany({
