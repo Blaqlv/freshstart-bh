@@ -1,5 +1,5 @@
 import { CrisisBanner } from "@/components/layout/CrisisBanner";
-import { Header } from "@/components/layout/Header";
+import { HeaderServer } from "@/components/layout/HeaderServer";
 import { Footer } from "@/components/layout/Footer";
 
 /**
@@ -15,7 +15,7 @@ export function StandaloneChrome({ children }: { children: React.ReactNode }) {
         Skip to main content
       </a>
       <CrisisBanner />
-      <Header />
+      <HeaderServer />
       <main id="main" className="flex-1">
         {children}
       </main>

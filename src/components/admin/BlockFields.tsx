@@ -19,6 +19,8 @@ import { IconPicker } from "./IconPicker";
 import { SegmentedControl, ColorField } from "./controls";
 import { BackgroundEditor } from "./BackgroundEditor";
 import { ColumnSplitPreview } from "./ColumnSplitPreview";
+import { ServiceSlugPicker } from "./ServiceSlugPicker";
+import { LinkPicker } from "./LinkPicker";
 
 const input = "mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm focus:border-brand-dark";
 const labelCls = "block text-xs font-medium text-ink-soft";
@@ -34,10 +36,12 @@ export function BlockFields({ block, onChange }: { block: Block; onChange: (patc
           <Field label="Eyebrow" value={block.eyebrow ?? ""} onChange={(v) => onChange({ eyebrow: v } as Partial<Block>)} />
           <Field label="Heading" value={block.heading} onChange={(v) => onChange({ heading: v } as Partial<Block>)} />
           <RichField label="Body" value={block.body ?? ""} onChange={(v) => onChange({ body: v } as Partial<Block>)} minimal />
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="CTA label" value={block.primaryCtaLabel ?? ""} onChange={(v) => onChange({ primaryCtaLabel: v } as Partial<Block>)} />
-            <Field label="CTA link" value={block.primaryCtaHref ?? ""} onChange={(v) => onChange({ primaryCtaHref: v } as Partial<Block>)} />
-          </div>
+          <Field label="CTA label" value={block.primaryCtaLabel ?? ""} onChange={(v) => onChange({ primaryCtaLabel: v } as Partial<Block>)} />
+          <LinkPicker
+            label="Primary CTA link"
+            value={block.primaryCtaHref ?? ""}
+            onChange={(v) => onChange({ primaryCtaHref: v } as Partial<Block>)}
+          />
           <SegmentedControl
             label="Minimum height"
             value={block.minHeight ?? "md"}
@@ -75,10 +79,12 @@ export function BlockFields({ block, onChange }: { block: Block; onChange: (patc
         <>
           <Field label="Heading" value={block.heading} onChange={(v) => onChange({ heading: v } as Partial<Block>)} />
           <RichField label="Body" value={block.body ?? ""} onChange={(v) => onChange({ body: v } as Partial<Block>)} minimal />
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Primary button label" value={block.ctaLabel ?? ""} onChange={(v) => onChange({ ctaLabel: v } as Partial<Block>)} />
-            <Field label="Primary button link" value={block.ctaHref ?? ""} onChange={(v) => onChange({ ctaHref: v } as Partial<Block>)} />
-          </div>
+          <Field label="Primary button label" value={block.ctaLabel ?? ""} onChange={(v) => onChange({ ctaLabel: v } as Partial<Block>)} />
+          <LinkPicker
+            label="Primary button link"
+            value={block.ctaHref ?? ""}
+            onChange={(v) => onChange({ ctaHref: v } as Partial<Block>)}
+          />
           <SegmentedControl
             label="Primary button style"
             value={block.buttonVariant ?? "white"}
@@ -90,10 +96,12 @@ export function BlockFields({ block, onChange }: { block: Block; onChange: (patc
             ]}
             onChange={(v) => onChange({ buttonVariant: v } as Partial<Block>)}
           />
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Secondary button label" value={block.secondaryCtaLabel ?? ""} onChange={(v) => onChange({ secondaryCtaLabel: v } as Partial<Block>)} />
-            <Field label="Secondary button link" value={block.secondaryCtaHref ?? ""} onChange={(v) => onChange({ secondaryCtaHref: v } as Partial<Block>)} />
-          </div>
+          <Field label="Secondary button label" value={block.secondaryCtaLabel ?? ""} onChange={(v) => onChange({ secondaryCtaLabel: v } as Partial<Block>)} />
+          <LinkPicker
+            label="Secondary button link"
+            value={block.secondaryCtaHref ?? ""}
+            onChange={(v) => onChange({ secondaryCtaHref: v } as Partial<Block>)}
+          />
           <SegmentedControl
             label="Section padding"
             value={block.padding ?? "md"}
@@ -148,11 +156,17 @@ export function BlockFields({ block, onChange }: { block: Block; onChange: (patc
       return (
         <>
           <Field label="Heading" value={block.heading ?? ""} onChange={(v) => onChange({ heading: v } as Partial<Block>)} />
-          <Field
-            label="Service slugs (comma-separated; blank = all published)"
-            value={(block.slugs ?? []).join(", ")}
-            onChange={(v) => onChange({ slugs: v.split(",").map((s) => s.trim()).filter(Boolean) } as Partial<Block>)}
-          />
+          <div>
+            <span className={labelCls}>Services (empty = show all published)</span>
+            <div className="mt-1">
+              <ServiceSlugPicker
+                value={block.slugs ?? []}
+                onChange={(slugs) => onChange({ slugs } as Partial<Block>)}
+                max={6}
+              />
+            </div>
+            <p className="mt-1 text-xs text-ink-soft">Select up to 6, or leave empty to show all active services.</p>
+          </div>
         </>
       );
     case "testimonialCarousel":
@@ -265,10 +279,12 @@ export function BlockFields({ block, onChange }: { block: Block; onChange: (patc
           />
           <Field label="Title" value={block.title} onChange={(v) => onChange({ title: v } as Partial<Block>)} />
           <RichField label="Body" value={block.body} onChange={(v) => onChange({ body: v } as Partial<Block>)} />
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="CTA label" value={block.ctaLabel ?? ""} onChange={(v) => onChange({ ctaLabel: v } as Partial<Block>)} />
-            <Field label="CTA link" value={block.ctaHref ?? ""} onChange={(v) => onChange({ ctaHref: v } as Partial<Block>)} />
-          </div>
+          <Field label="CTA label" value={block.ctaLabel ?? ""} onChange={(v) => onChange({ ctaLabel: v } as Partial<Block>)} />
+          <LinkPicker
+            label="CTA link"
+            value={block.ctaHref ?? ""}
+            onChange={(v) => onChange({ ctaHref: v } as Partial<Block>)}
+          />
         </>
       );
     case "imageTitleBelow":
@@ -370,7 +386,11 @@ export function BlockFields({ block, onChange }: { block: Block; onChange: (patc
           />
           {block.linkUrl !== undefined && (
             <>
-              <Field label="Link URL" value={block.linkUrl} onChange={(v) => onChange({ linkUrl: v } as Partial<Block>)} />
+              <LinkPicker
+                label="Link URL"
+                value={block.linkUrl ?? ""}
+                onChange={(v) => onChange({ linkUrl: v } as Partial<Block>)}
+              />
               <Toggle label="Open in new tab" checked={!!block.linkOpensNewTab} onChange={(v) => onChange({ linkOpensNewTab: v } as Partial<Block>)} />
             </>
           )}

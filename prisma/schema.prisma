@@ -57,6 +57,12 @@ enum TranslationStatus {
   APPROVED
 }
 
+enum NavPlacement {
+  TOP_NAV
+  FOOTER
+  UTILITY_BAR
+}
+
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
@@ -106,7 +112,9 @@ model Page {
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
-  versions PageVersion[]
+  versions        PageVersion[]
+  service         Service?
+  navigationItems NavigationItem[]
 
   @@index([status])
 }
@@ -190,17 +198,43 @@ model Testimonial {
 }
 
 model Service {
-  id          String        @id @default(cuid())
-  slug        String        @unique
-  title       String
-  summary     String?
-  description String?
-  eligibility String[]
-  faqs        Json          @default("[]") // [{q,a}]
-  status      ContentStatus @default(DRAFT)
-  order       Int           @default(0)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id              String        @id @default(cuid())
+  slug            String        @unique
+  title           String
+  // Legacy fields — kept for backward compat
+  summary         String?
+  description     String?
+  eligibility     String[]
+  faqs            Json          @default("[]")
+  // New CMS-management fields
+  excerpt         String        @default("")
+  metaDescription String?
+  iconName        String?
+  sortOrder       Int           @default(0)
+  isActive        Boolean       @default(true)
+  status          ContentStatus @default(DRAFT)
+  order           Int           @default(0)
+  pageId          String?       @unique
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  page            Page?            @relation(fields: [pageId], references: [id])
+  relatedServices RelatedService[] @relation("PrimaryService")
+  relatedTo       RelatedService[] @relation("RelatedService")
+  navigationItems NavigationItem[]
+
+  @@index([isActive, sortOrder])
+}
+
+model RelatedService {
+  id          String  @id @default(cuid())
+  primaryId   String
+  relatedId   String
+  sortOrder   Int     @default(0)
+  primary     Service @relation("PrimaryService", fields: [primaryId], references: [id], onDelete: Cascade)
+  related     Service @relation("RelatedService", fields: [relatedId], references: [id], onDelete: Cascade)
+
+  @@unique([primaryId, relatedId])
 }
 
 model Location {
@@ -829,4 +863,33 @@ model RolePermission {
 
   @@unique([roleKey, permissionKey])
   @@index([permissionKey])
+}
+
+// ---------------------------------------------------------------------------
+// Navigation Builder (Prompt 12) — DB-driven nav replacing lib/site.ts hardcode
+// ---------------------------------------------------------------------------
+
+model NavigationItem {
+  id                 String        @id @default(cuid())
+  label              String
+  href               String?
+  pageId             String?
+  serviceId          String?
+  target             String        @default("_self")
+  iconName           String?
+  placement          NavPlacement
+  footerColumn       Int?
+  parentId           String?
+  sortOrder          Int           @default(0)
+  isVisible          Boolean       @default(true)
+  autoExpandServices Boolean       @default(false)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  page     Page?            @relation(fields: [pageId], references: [id], onDelete: SetNull)
+  service  Service?         @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  parent   NavigationItem?  @relation("NavChildren", fields: [parentId], references: [id], onDelete: SetNull)
+  children NavigationItem[] @relation("NavChildren")
+
+  @@index([placement, sortOrder])
 }
