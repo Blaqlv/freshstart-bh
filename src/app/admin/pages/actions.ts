@@ -61,6 +61,16 @@ async function persistDraft(formData: FormData, pageId: string) {
   const title = String(formData.get("title") ?? "").trim();
   const blocks = parseBlocks(JSON.parse(String(formData.get("blocks") ?? "[]")));
   const draft = await ensureDraft(pageId);
+
+  // Service pages are always SERVICE_DETAIL with a sidebar — ignore whatever the
+  // form submitted for these two fields so a stray client-side change (or a
+  // hand-crafted request) can never overwrite the locked values.
+  const existing = await db.page.findUniqueOrThrow({
+    where: { id: pageId },
+    select: { service: { select: { id: true } } },
+  });
+  const isServicePage = !!existing.service;
+
   await db.$transaction([
     db.page.update({
       where: { id: pageId },
@@ -70,9 +80,12 @@ async function persistDraft(formData: FormData, pageId: string) {
         seoDescription: (String(formData.get("seoDescription") ?? "") || null) as string | null,
         canonicalUrl: (String(formData.get("canonicalUrl") ?? "") || null) as string | null,
         ogImageUrl: (String(formData.get("ogImageUrl") ?? "") || null) as string | null,
-        template:
-          String(formData.get("template")) === "SERVICE_DETAIL" ? "SERVICE_DETAIL" : "GENERAL",
-        hasSidebar: String(formData.get("hasSidebar")) === "true",
+        template: isServicePage
+          ? "SERVICE_DETAIL"
+          : String(formData.get("template")) === "SERVICE_DETAIL"
+            ? "SERVICE_DETAIL"
+            : "GENERAL",
+        hasSidebar: isServicePage ? true : String(formData.get("hasSidebar")) === "true",
         defaultBlockSpacing:
           (String(formData.get("defaultBlockSpacing") ?? "") || null) as string | null,
       },
@@ -141,4 +154,61 @@ export async function deletePage(formData: FormData) {
   await audit({ sub: session.sub, email: session.email }, "page.delete", "Page", pageId);
   revalidatePath("/admin/pages");
   redirect("/admin/pages");
+}
+
+/** Finds a slug that isn't already taken, appending -2, -3, etc. as needed. */
+async function findAvailableSlug(baseSlug: string): Promise<string> {
+  let candidate = baseSlug;
+  let counter = 2;
+  while (await db.page.findUnique({ where: { slug: candidate }, select: { id: true } })) {
+    candidate = `${baseSlug}-${counter}`;
+    counter++;
+  }
+  return candidate;
+}
+
+/**
+ * Duplicates a page as an unpublished draft: same blocks, new slug ([slug]-copy,
+ * auto-incremented on collision). Never copies the service link — a duplicate of
+ * a service page becomes a standalone GENERAL page with a sidebar, since only the
+ * original page is the canonical page for that service.
+ */
+export async function duplicatePage(
+  pageId: string,
+): Promise<{ newPageId: string; newSlug: string; wasServicePage: boolean }> {
+  const session = await requireCapability("content:write");
+
+  const source = await db.page.findUniqueOrThrow({
+    where: { id: pageId },
+    include: {
+      service: { select: { id: true } },
+      versions: { orderBy: { version: "desc" }, take: 1 },
+    },
+  });
+
+  const wasServicePage = !!source.service;
+  const newSlug = await findAvailableSlug(`${source.slug}-copy`);
+  const blocks = source.versions[0]?.blocks ?? [];
+
+  const newPage = await db.page.create({
+    data: {
+      slug: newSlug,
+      title: `${source.title} (Copy)`,
+      status: "DRAFT",
+      seoTitle: source.seoTitle ? `${source.seoTitle} (Copy)` : null,
+      seoDescription: source.seoDescription,
+      ogImageUrl: source.ogImageUrl,
+      template: wasServicePage ? "GENERAL" : source.template,
+      hasSidebar: wasServicePage ? true : source.hasSidebar,
+      defaultBlockSpacing: source.defaultBlockSpacing,
+      versions: { create: { version: 1, status: "DRAFT", blocks: blocks as object } },
+    },
+  });
+
+  await audit({ sub: session.sub, email: session.email }, "page.duplicate", "Page", newPage.id, {
+    sourcePageId: pageId,
+    slug: newSlug,
+  });
+  revalidatePath("/admin/pages");
+  return { newPageId: newPage.id, newSlug, wasServicePage };
 }

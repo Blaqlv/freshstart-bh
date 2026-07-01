@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { Copy } from "lucide-react";
 import { StatusBadge } from "./StatusBadge";
+import { duplicatePage } from "@/app/admin/pages/actions";
 
 export type PageRow = {
   id: string;
@@ -20,13 +22,35 @@ export type PageFilters = { template: string; status: string; sidebar: string; q
 const control = "rounded-lg border border-line px-3 py-2 text-sm";
 const badge = "rounded-full bg-surface-alt px-2 py-0.5 text-xs font-medium text-ink-soft";
 
-export function PagesBrowser({ rows, initial }: { rows: PageRow[]; initial: PageFilters }) {
+export function PagesBrowser({
+  rows,
+  initial,
+  canWrite = false,
+}: {
+  rows: PageRow[];
+  initial: PageFilters;
+  canWrite?: boolean;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const [template, setTemplate] = useState(initial.template);
   const [status, setStatus] = useState(initial.status);
   const [sidebar, setSidebar] = useState(initial.sidebar);
   const [q, setQ] = useState(initial.q);
+  const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
+
+  async function handleDuplicate(pageId: string) {
+    setDuplicatingId(pageId);
+    try {
+      const result = await duplicatePage(pageId);
+      const suffix = result.wasServicePage ? "?duplicated=service" : "";
+      router.push(`/admin/pages/${result.newPageId}${suffix}`);
+    } catch (err) {
+      console.warn("Duplicate failed", err);
+    } finally {
+      setDuplicatingId(null);
+    }
+  }
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -102,12 +126,13 @@ export function PagesBrowser({ rows, initial }: { rows: PageRow[]; initial: Page
               <th className="px-4 py-3 font-medium">Slug</th>
               <th className="px-4 py-3 font-medium">Status</th>
               <th className="px-4 py-3 font-medium">Updated</th>
+              {canWrite && <th className="px-4 py-3 font-medium text-right">Actions</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-ink-soft">
+                <td colSpan={canWrite ? 5 : 4} className="px-4 py-8 text-center text-ink-soft">
                   No pages match these filters.
                 </td>
               </tr>
@@ -124,6 +149,20 @@ export function PagesBrowser({ rows, initial }: { rows: PageRow[]; initial: Page
                   <StatusBadge status={p.status} />
                 </td>
                 <td className="px-4 py-3 text-ink-soft">{p.updated}</td>
+                {canWrite && (
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      type="button"
+                      onClick={() => handleDuplicate(p.id)}
+                      disabled={duplicatingId === p.id}
+                      title="Duplicate this page as a draft"
+                      className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-dark hover:underline disabled:opacity-50"
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                      {duplicatingId === p.id ? "Duplicating…" : "Duplicate"}
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

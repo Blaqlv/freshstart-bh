@@ -147,6 +147,7 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
                 }}
                 initialBlocks={parseBlocks(service.page.versions[0]?.blocks)}
                 canPublish={canPublish}
+                isServicePage
               />
 
               {canPublish && service.page.status !== "PUBLISHED" && (

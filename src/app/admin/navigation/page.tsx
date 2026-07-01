@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { requireCapability } from "@/lib/auth";
 import { can } from "@/lib/rbac";
 import { toggleNavItemVisibility, deleteNavItem } from "./actions";
-import type { NavPlacement } from "@prisma/client";
+import type { NavPlacement, Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -13,14 +13,36 @@ const PLACEMENT_LABELS: Record<NavPlacement, string> = {
   UTILITY_BAR: "Utility Bar",
 };
 
+type NavItemWithChildren = Prisma.NavigationItemGetPayload<{ include: { children: true } }>;
+
 export default async function NavigationAdminPage() {
   const session = await requireCapability("content:read");
   const canWrite = can(session.role, "content:write");
 
-  const items = await db.navigationItem.findMany({
-    orderBy: [{ placement: "asc" }, { footerColumn: "asc" }, { sortOrder: "asc" }],
-    include: { children: { orderBy: { sortOrder: "asc" } } },
-  });
+  let items: NavItemWithChildren[] = [];
+  let loadError: string | null = null;
+  try {
+    items = await db.navigationItem.findMany({
+      orderBy: [{ placement: "asc" }, { footerColumn: "asc" }, { sortOrder: "asc" }],
+      include: { children: { orderBy: { sortOrder: "asc" } } },
+    });
+  } catch (err) {
+    console.error("[NavigationAdminPage] Failed to load navigation items:", err);
+    loadError = err instanceof Error ? err.message : "Unknown database error";
+  }
+
+  if (loadError) {
+    return (
+      <div className="rounded-lg border border-red-200 bg-red-50 p-6">
+        <h2 className="mb-2 text-lg font-semibold text-red-800">Navigation builder unavailable</h2>
+        <p className="text-sm text-red-700">
+          There was a problem loading navigation data. This is usually caused by a pending
+          database migration.
+        </p>
+        <p className="mt-2 font-mono text-sm text-red-700">Error: {loadError}</p>
+      </div>
+    );
+  }
 
   const topNav = items.filter((i) => i.placement === "TOP_NAV" && !i.parentId);
   const footer = items.filter((i) => i.placement === "FOOTER");

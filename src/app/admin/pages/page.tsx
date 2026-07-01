@@ -58,7 +58,7 @@ export default async function PagesList({
         )}
       </div>
 
-      <PagesBrowser rows={rows} initial={initial} />
+      <PagesBrowser rows={rows} initial={initial} canWrite={canWrite} />
     </div>
   );
 }

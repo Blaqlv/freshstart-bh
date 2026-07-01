@@ -8,6 +8,7 @@ import { acceptedInsurance, site } from "@/lib/site";
 import { JsonLd } from "@/components/JsonLd";
 import { serviceSchema } from "@/lib/jsonld";
 import { BlockRenderer } from "@/components/cms/BlockRenderer";
+import { ServiceSidebar } from "@/components/cms/ServiceSidebar";
 import { parseBlocks } from "@/lib/cms/blocks";
 
 export const dynamic = "force-dynamic";
@@ -43,11 +44,20 @@ export default async function ServiceDetail({ params }: { params: Promise<{ slug
   const service = await getService(slug);
   if (!service) notFound();
 
-  // If a published CMS page is linked, render its blocks
+  // If a published CMS page is linked, render its blocks alongside the standard
+  // service sidebar — service pages always show the sidebar, regardless of any
+  // page-level hasSidebar setting.
   const publishedVersion = service.page?.versions?.[0];
   if (service.pageId && publishedVersion) {
     const blocks = parseBlocks(publishedVersion.blocks);
-    return <BlockRenderer blocks={blocks} />;
+    return (
+      <Container className="grid gap-12 py-12 lg:grid-cols-[1fr_320px]">
+        <div>
+          <BlockRenderer blocks={blocks} />
+        </div>
+        <ServiceSidebar currentSlug={slug} />
+      </Container>
+    );
   }
 
   const faqs = (Array.isArray(service.faqs) ? service.faqs : []) as unknown as Faq[];

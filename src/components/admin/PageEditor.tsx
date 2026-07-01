@@ -16,13 +16,13 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Plus } from "lucide-react";
+import { Plus, Copy, Lock } from "lucide-react";
 import {
   type Block,
   type BlockType,
   blockRegistry,
 } from "@/lib/cms/blocks";
-import { savePage, publishPage, autosavePage } from "@/app/admin/pages/actions";
+import { savePage, publishPage, autosavePage, duplicatePage } from "@/app/admin/pages/actions";
 import { StatusBadge } from "./StatusBadge";
 import { SaveStatus } from "./SaveStatus";
 import type { ContentStatus, PageTemplate } from "@prisma/client";
@@ -63,10 +63,12 @@ export function PageEditor({
   page,
   initialBlocks,
   canPublish,
+  isServicePage = false,
 }: {
   page: PageData;
   initialBlocks: Block[];
   canPublish: boolean;
+  isServicePage?: boolean;
 }) {
   const [items, setItems] = useState<Item[]>(() =>
     initialBlocks.map((block) => ({ id: makeId(), block })),
@@ -86,6 +88,20 @@ export function PageEditor({
   const firstRender = useRef(true);
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
+  const [duplicating, setDuplicating] = useState(false);
+
+  async function handleDuplicate() {
+    setDuplicating(true);
+    try {
+      const result = await duplicatePage(page.id);
+      const suffix = result.wasServicePage ? "?duplicated=service" : "";
+      window.open(`/admin/pages/${result.newPageId}${suffix}`, "_blank");
+    } catch (err) {
+      console.warn("Duplicate failed", err);
+    } finally {
+      setDuplicating(false);
+    }
+  }
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -241,6 +257,16 @@ export function PageEditor({
             Preview draft
           </a>
           <button
+            type="button"
+            onClick={handleDuplicate}
+            disabled={duplicating}
+            title="Duplicate this page as a draft"
+            className="flex items-center gap-1.5 rounded-full border border-line bg-white px-4 py-2 text-sm font-semibold text-ink hover:bg-surface-alt disabled:opacity-50"
+          >
+            <Copy className="h-4 w-4" />
+            {duplicating ? "Duplicating…" : "Duplicate"}
+          </button>
+          <button
             type="submit"
             formAction={savePage}
             className="rounded-full border border-line bg-white px-4 py-2 text-sm font-semibold text-ink hover:bg-surface-alt"
@@ -271,21 +297,36 @@ export function PageEditor({
       </div>
 
       <div className="space-y-3 rounded-card border border-line bg-white p-4">
-        <Radio
-          label="Template"
-          value={template}
-          options={[
-            { value: "SERVICE_DETAIL", label: "Service Detail page" },
-            { value: "GENERAL", label: "General page" },
-          ]}
-          onChange={(v) => setTemplate(v as PageTemplate)}
-        />
-        {template === "GENERAL" && (
-          <Toggle
-            label="Show sidebar with contact CTAs and insurance information"
-            checked={hasSidebar}
-            onChange={setHasSidebar}
-          />
+        {isServicePage ? (
+          <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 p-3">
+            <Lock className="h-4 w-4 flex-shrink-0 text-blue-600" />
+            <div>
+              <p className="text-sm font-medium text-blue-800">Service Detail template</p>
+              <p className="text-xs text-blue-600">
+                Template and sidebar are locked for service pages. Manage service metadata from
+                the Services list.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <>
+            <Radio
+              label="Template"
+              value={template}
+              options={[
+                { value: "SERVICE_DETAIL", label: "Service Detail page" },
+                { value: "GENERAL", label: "General page" },
+              ]}
+              onChange={(v) => setTemplate(v as PageTemplate)}
+            />
+            {template === "GENERAL" && (
+              <Toggle
+                label="Show sidebar with contact CTAs and insurance information"
+                checked={hasSidebar}
+                onChange={setHasSidebar}
+              />
+            )}
+          </>
         )}
         <SegmentedControl
           label="Default spacing for new blocks"
