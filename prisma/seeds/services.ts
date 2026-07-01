@@ -23,7 +23,7 @@ export async function seedServices() {
   for (const svc of FRESH_START_SERVICES) {
     await db.service.upsert({
       where: { slug: svc.slug },
-      update: { excerpt: svc.excerpt, iconName: svc.iconName, sortOrder: svc.sortOrder, isActive: true },
+      update: { excerpt: svc.excerpt, iconName: svc.iconName, sortOrder: svc.sortOrder, order: svc.sortOrder, isActive: true },
       create: {
         slug: svc.slug,
         title: svc.title,
