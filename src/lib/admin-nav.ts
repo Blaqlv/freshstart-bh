@@ -20,6 +20,8 @@ export function buildAdminNav(input: {
   if (has("content:read")) {
     nav.push(
       { label: "Pages", href: "/admin/pages" },
+      { label: "Services", href: "/admin/services" },
+      { label: "Navigation", href: "/admin/navigation" },
       { label: "Providers", href: "/admin/providers" },
       { label: "Testimonials", href: "/admin/testimonials" },
     );
