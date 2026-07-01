@@ -2,11 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { primaryNav, site } from "@/lib/site";
+import { site } from "@/lib/site";
 import { cn } from "@/lib/cn";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import type { TopNavItem } from "@/lib/nav";
 
-export function Header() {
+interface HeaderProps {
+  nav: TopNavItem[];
+}
+
+export function Header({ nav }: HeaderProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -27,15 +32,15 @@ export function Header() {
         {/* Desktop nav */}
         <nav aria-label="Primary" className="hidden lg:block">
           <ul className="flex items-center gap-1">
-            {primaryNav.map((item) => (
-              <li key={item.href} className="group relative">
+            {nav.map((item) => (
+              <li key={item.id} className="group relative">
                 <Link
-                  href={item.href}
+                  href={item.href ?? "#"}
                   className="inline-flex items-center rounded-md px-3 py-2 text-sm font-medium text-ink hover:text-brand-dark"
                 >
                   {item.label}
                 </Link>
-                {"children" in item && item.children && (
+                {item.children.length > 0 && (
                   <ul className="invisible absolute left-0 top-full min-w-56 rounded-xl border border-line bg-white p-2 opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
                     {item.children.map((c) => (
                       <li key={c.href}>
@@ -93,16 +98,16 @@ export function Header() {
       >
         <nav aria-label="Mobile" className="mx-auto max-w-6xl px-4 py-4 sm:px-6">
           <ul className="space-y-1">
-            {primaryNav.map((item) => (
-              <li key={item.href}>
+            {nav.map((item) => (
+              <li key={item.id}>
                 <Link
-                  href={item.href}
+                  href={item.href ?? "#"}
                   className="block rounded-md px-3 py-2 font-medium text-ink hover:bg-brand-tint"
                   onClick={() => setOpen(false)}
                 >
                   {item.label}
                 </Link>
-                {"children" in item && item.children && (
+                {item.children.length > 0 && (
                   <ul className="ml-3 border-l border-line pl-3">
                     {item.children.map((c) => (
                       <li key={c.href}>

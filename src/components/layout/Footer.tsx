@@ -1,10 +1,13 @@
 import Link from "next/link";
-import { footerNav, locations, site } from "@/lib/site";
+import { locations, site } from "@/lib/site";
+import { getNavigation } from "@/lib/nav";
 import { CookieSettingsLink } from "@/components/consent/CookieSettingsLink";
 import { StatusPill } from "@/components/StatusPill";
 import { STATUSPAGE_URL } from "@/lib/statuspage";
 
-export function Footer() {
+export async function Footer() {
+  const { footerColumns } = await getNavigation();
+  const footerNav = footerColumns.flat();
   return (
     <footer className="mt-auto bg-brand-dark text-white">
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
