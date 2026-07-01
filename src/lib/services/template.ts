@@ -1,3 +1,4 @@
+import { CRISIS_PHONE_HREF } from "@/lib/constants";
 import type { Block } from "@/lib/cms/blocks";
 
 type ServiceInput = {
@@ -77,7 +78,7 @@ export function buildServicePageBlocks(service: ServiceInput): Block[] {
       ctaHref: "/intake",
       buttonVariant: "white",
       secondaryCtaLabel: "Call Us",
-      secondaryCtaHref: "tel:+19375790073",
+      secondaryCtaHref: CRISIS_PHONE_HREF,
       textAlign: "center",
       padding: "lg",
     },
