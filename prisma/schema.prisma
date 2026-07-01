@@ -107,6 +107,7 @@ model Page {
   updatedAt         DateTime          @updatedAt
 
   versions PageVersion[]
+  service  Service?
 
   @@index([status])
 }
@@ -190,17 +191,42 @@ model Testimonial {
 }
 
 model Service {
-  id          String        @id @default(cuid())
-  slug        String        @unique
-  title       String
-  summary     String?
-  description String?
-  eligibility String[]
-  faqs        Json          @default("[]") // [{q,a}]
-  status      ContentStatus @default(DRAFT)
-  order       Int           @default(0)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id              String        @id @default(cuid())
+  slug            String        @unique
+  title           String
+  // Legacy fields — kept for backward compat
+  summary         String?
+  description     String?
+  eligibility     String[]
+  faqs            Json          @default("[]")
+  // New CMS-management fields
+  excerpt         String        @default("")
+  metaDescription String?
+  iconName        String?
+  sortOrder       Int           @default(0)
+  isActive        Boolean       @default(true)
+  status          ContentStatus @default(DRAFT)
+  order           Int           @default(0)
+  pageId          String?       @unique
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  page            Page?         @relation(fields: [pageId], references: [id])
+  relatedServices RelatedService[] @relation("PrimaryService")
+  relatedTo       RelatedService[] @relation("RelatedService")
+
+  @@index([isActive, sortOrder])
+}
+
+model RelatedService {
+  id          String  @id @default(cuid())
+  primaryId   String
+  relatedId   String
+  sortOrder   Int     @default(0)
+  primary     Service @relation("PrimaryService", fields: [primaryId], references: [id], onDelete: Cascade)
+  related     Service @relation("RelatedService", fields: [relatedId], references: [id], onDelete: Cascade)
+
+  @@unique([primaryId, relatedId])
 }
 
 model Location {
