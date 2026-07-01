@@ -27,6 +27,39 @@ export type BlockType =
   | "horizontalDivider"
   | "imageOnly";
 
+// Blocks that render their own full-bleed section + Container internally.
+// These must never be nested inside a narrower sidebar column.
+const WIDE_BLOCK_TYPES = new Set<BlockType>([
+  "hero",
+  "ctaBanner",
+  "serviceGrid",
+  "testimonialCarousel",
+  "locationGrid",
+  "teamGrid",
+]);
+
+export type BlockSegment = { wide: boolean; blocks: Block[] };
+
+/**
+ * Splits a block list into contiguous runs of "wide" (full-bleed) blocks and
+ * "narrow" (sidebar-eligible) blocks. Lets a page pair a sidebar with only the
+ * narrow runs — e.g. richText/FAQ content — without squeezing full-bleed
+ * sections like the hero or closing CTA into the sidebar's content column.
+ */
+export function splitBlocksForSidebar(blocks: Block[]): BlockSegment[] {
+  const segments: BlockSegment[] = [];
+  for (const block of blocks) {
+    const wide = WIDE_BLOCK_TYPES.has(block.type);
+    const last = segments[segments.length - 1];
+    if (last && last.wide === wide) {
+      last.blocks.push(block);
+    } else {
+      segments.push({ wide, blocks: [block] });
+    }
+  }
+  return segments;
+}
+
 export type BlockCategory = "text" | "images" | "layout" | "dynamic";
 
 export const blockCategories: { id: BlockCategory; label: string }[] = [

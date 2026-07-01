@@ -224,7 +224,7 @@ async function BlockView({ block, flush = false }: { block: Block; flush?: boole
         orderBy: { order: "asc" },
       });
       return (
-        <section className={vpad(flush, "py-12")}>
+        <section className="bg-surface-alt py-12">
           <Container>
             {block.heading && <h2 className="text-2xl font-bold text-brand-dark">{block.heading}</h2>}
             <ul className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

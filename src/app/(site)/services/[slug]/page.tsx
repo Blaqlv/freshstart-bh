@@ -9,7 +9,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { serviceSchema } from "@/lib/jsonld";
 import { BlockRenderer } from "@/components/cms/BlockRenderer";
 import { ServiceSidebar } from "@/components/cms/ServiceSidebar";
-import { parseBlocks } from "@/lib/cms/blocks";
+import { parseBlocks, splitBlocksForSidebar } from "@/lib/cms/blocks";
 
 export const dynamic = "force-dynamic";
 
@@ -46,17 +46,30 @@ export default async function ServiceDetail({ params }: { params: Promise<{ slug
 
   // If a published CMS page is linked, render its blocks alongside the standard
   // service sidebar — service pages always show the sidebar, regardless of any
-  // page-level hasSidebar setting.
+  // page-level hasSidebar setting. Full-bleed blocks (hero, CTA banner, related
+  // services grid, etc.) already manage their own section/Container, so only
+  // the narrow "content" runs (richText, FAQ, icon list...) are paired with the
+  // sidebar — otherwise those full-bleed sections would get squeezed into the
+  // sidebar's content column instead of spanning the page.
   const publishedVersion = service.page?.versions?.[0];
   if (service.pageId && publishedVersion) {
     const blocks = parseBlocks(publishedVersion.blocks);
+    const segments = splitBlocksForSidebar(blocks);
     return (
-      <Container className="grid gap-12 py-12 lg:grid-cols-[1fr_320px]">
-        <div>
-          <BlockRenderer blocks={blocks} />
-        </div>
-        <ServiceSidebar currentSlug={slug} />
-      </Container>
+      <>
+        {segments.map((segment, i) =>
+          segment.wide ? (
+            <BlockRenderer key={i} blocks={segment.blocks} />
+          ) : (
+            <Container key={i} className="grid gap-12 py-12 lg:grid-cols-[1fr_320px]">
+              <div>
+                <BlockRenderer blocks={segment.blocks} />
+              </div>
+              <ServiceSidebar currentSlug={slug} />
+            </Container>
+          ),
+        )}
+      </>
     );
   }
 
