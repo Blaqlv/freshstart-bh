@@ -2,14 +2,14 @@
 
 /*
   Fresh Start Behavioral Health — design tokens.
-  Palette + type harvested from the live site (see BRAND.md). Do not introduce
-  a new palette. Brand teal #4ba5aa is decorative/large-display only; use
-  --color-brand-dark (#31585d) for text/links on light backgrounds (WCAG AA).
+  Palette + type harvested from the live site (see BRAND.md), with the primary
+  accent updated to navy. Brand teal #4ba5aa is decorative/large-display only;
+  use --color-brand-dark (#000068) for text/links on light backgrounds (WCAG AA).
 */
 @theme {
   --color-brand: #4ba5aa;
   --color-brand-hover: #5497a0;
-  --color-brand-dark: #31585d;
+  --color-brand-dark: #000068;
   --color-brand-tint: #eef6f6;
   /* Brand red, deepened from #ed1c24 so white-on-accent (crisis banner) and
      accent-on-white (links/errors) both clear WCAG 2.2 AA 4.5:1. Same hue. */

@@ -8,6 +8,12 @@
 > **Rule:** these are the real brand tokens. Reuse them as Tailwind theme tokens /
 > CSS variables. Do **not** introduce a new palette. If a pairing fails WCAG AA,
 > adjust the *pairing*, not the brand color (see Accessibility notes below).
+>
+> **Update:** the primary/CTA token (`brand-dark`) was deliberately changed from
+> the harvested teal `#31585d` to navy `#000068` per explicit request. The
+> "Usage on live site" table below still reflects the original DoctorLogic
+> snapshot for historical reference; the "Proposed Tailwind theme mapping" and
+> implementation (`src/app/globals.css`) reflect the current navy value.
 
 ## Platform of record (current site)
 
@@ -32,7 +38,7 @@
 
 Proposed Tailwind theme mapping:
 ```
-brand:        { DEFAULT: '#4ba5aa', hover: '#5497a0', dark: '#31585d',
+brand:        { DEFAULT: '#4ba5aa', hover: '#5497a0', dark: '#000068',
                 tint: 'rgba(75,165,170,0.1)' }
 accent:       '#ed1c24'
 gold:         '#ffdd00'
@@ -45,7 +51,7 @@ gold:         '#ffdd00'
 >   `#ed1c24`). White-on-accent (crisis banner) and accent-on-white (links /
 >   error text) were both at 4.35:1; the deeper shade clears 4.5:1 both ways.
 > - **White text never sits on primary teal `#4ba5aa`** (2.89:1). Logo badges,
->   the hero, and CTA banners use `brand-dark #31585d` (~7.4:1) instead. Teal
+>   the hero, and CTA banners use `brand-dark #000068` (~15.5:1) instead. Teal
 >   remains for decorative fills, progress bars, and chart bars (no text).
 >
 > Verified by an automated axe-core WCAG 2.2 AA scan across 38 routes
@@ -95,7 +101,7 @@ in Mental Health". Keep this register for all new (net-new) page copy.
   text. On the live site it's used mostly as a *background* with white text
   (white on `#4ba5aa` ≈ 2.6:1 — also borderline) and for large headings.
 - Resolution per brief: **keep the brand teal**, but for AA-compliant text use
-  `--primary-dark #31585d` (white on `#31585d` ≈ 7:1, passes AA/AAA) for text/links
+  `--primary-dark #000068` (white on `#000068` ≈ 15.5:1, passes AA/AAA) for text/links
   on light backgrounds, and reserve `#4ba5aa` for large display type, fills, and
   decorative surfaces. Verify every final pairing with an automated contrast check
   in the Phase 9 accessibility pass.

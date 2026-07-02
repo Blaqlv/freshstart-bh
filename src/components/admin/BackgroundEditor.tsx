@@ -70,7 +70,7 @@ export function BackgroundEditor({
 
       {value.type === "color" && (
         <div className="space-y-3">
-          <ColorField label="Background colour" value={value.color} onChange={(v) => patch({ color: v })} defaultValue="#31585d" />
+          <ColorField label="Background colour" value={value.color} onChange={(v) => patch({ color: v })} defaultValue="#000068" />
           <OpacitySlider
             label="Background opacity — lower values make it more transparent."
             value={value.colorOpacity ?? 100}
@@ -131,7 +131,7 @@ export function BackgroundEditor({
       {value.type === "gradient" && (
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
-            <ColorField label="Start colour" value={value.gradientFrom} onChange={(v) => patch({ gradientFrom: v })} defaultValue="#31585d" />
+            <ColorField label="Start colour" value={value.gradientFrom} onChange={(v) => patch({ gradientFrom: v })} defaultValue="#000068" />
             <ColorField label="End colour" value={value.gradientTo} onChange={(v) => patch({ gradientTo: v })} defaultValue="#4ba5aa" />
           </div>
           <div>

@@ -16,7 +16,7 @@ export function buildServicePageBlocks(service: ServiceInput): Block[] {
       body: service.metaDescription ?? service.excerpt,
       primaryCtaLabel: "Book an Assessment",
       primaryCtaHref: "/intake",
-      background: { type: "color", color: "#31585d", colorOpacity: 100 },
+      background: { type: "color", color: "#000068", colorOpacity: 100 },
       textColor: "#ffffff",
       textAlign: "center",
       minHeight: "sm",
@@ -33,7 +33,7 @@ export function buildServicePageBlocks(service: ServiceInput): Block[] {
       title: `Benefits of ${service.title}`,
       intro: "",
       columns: 2,
-      iconColor: "#31585d",
+      iconColor: "#000068",
       items: [
         { icon: "CheckCircle2", label: "Benefit one", body: "" },
         { icon: "CheckCircle2", label: "Benefit two", body: "" },

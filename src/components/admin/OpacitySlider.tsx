@@ -7,7 +7,7 @@ export function OpacitySlider({
   value,
   onChange,
   label,
-  trackColor = "#31585d",
+  trackColor = "#000068",
 }: {
   value: number;
   onChange: (v: number) => void;

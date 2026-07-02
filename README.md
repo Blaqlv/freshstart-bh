@@ -66,9 +66,10 @@ Seeded patient login (Patient Portal): `patient@freshstartbh.test` / `ChangeMe12
 
 ## Brand tokens
 
-Defined in `src/app/globals.css`. Primary teal `#4ba5aa` is **decorative/large-display
-only**; use `#31585d` (`brand-dark`) for text/links on light backgrounds to meet
-WCAG 2.2 AA. See `BRAND.md` for the full audit and rationale.
+Defined in `src/app/globals.css`. Decorative teal `#4ba5aa` is **decorative/large-display
+only**; use `#000068` (`brand-dark`) for text/links, CTAs, and other primary-colour
+surfaces on light backgrounds to meet WCAG 2.2 AA. See `BRAND.md` for the full audit
+and rationale.
 
 ## Analytics
 

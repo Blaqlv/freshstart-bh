@@ -16,18 +16,18 @@ const html = `<!doctype html><html lang="en"><head><meta charset="utf-8">
     font-family: "Segoe UI", Arial, Helvetica, sans-serif;
     color: #1f2933; font-size: 11pt; line-height: 1.5; margin: 0;
   }
-  h1 { color: #31585d; font-size: 22pt; border-bottom: 3px solid #4ba5aa;
+  h1 { color: #000068; font-size: 22pt; border-bottom: 3px solid #4ba5aa;
        padding-bottom: 6px; margin: 0 0 4px; }
-  h2 { color: #31585d; font-size: 15pt; margin: 26px 0 8px;
+  h2 { color: #000068; font-size: 15pt; margin: 26px 0 8px;
        border-bottom: 1px solid #d6e4e5; padding-bottom: 4px; }
-  h3 { color: #31585d; font-size: 12.5pt; margin: 18px 0 6px; }
+  h3 { color: #000068; font-size: 12.5pt; margin: 18px 0 6px; }
   p, li { margin: 6px 0; }
   em { color: #52606d; }
-  a { color: #31585d; text-decoration: none; }
+  a { color: #000068; text-decoration: none; }
   code { background: #eef4f4; padding: 1px 5px; border-radius: 4px;
-         font-family: "Consolas", monospace; font-size: 9.5pt; color: #31585d; }
+         font-family: "Consolas", monospace; font-size: 9.5pt; color: #000068; }
   table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 10pt; }
-  th { background: #31585d; color: #fff; text-align: left; padding: 7px 10px; }
+  th { background: #000068; color: #fff; text-align: left; padding: 7px 10px; }
   td { border: 1px solid #d6e4e5; padding: 7px 10px; vertical-align: top; }
   tr:nth-child(even) td { background: #f5f9f9; }
   blockquote { border-left: 4px solid #4ba5aa; background: #f5f9f9;
@@ -42,13 +42,13 @@ const html = `<!doctype html><html lang="en"><head><meta charset="utf-8">
   .cover .logo { display: flex; align-items: center; justify-content: center;
                  gap: 16px; margin-bottom: 48px; }
   .cover .mark { width: 88px; height: 88px; border-radius: 50%;
-                 background: #31585d; color: #fff; font-weight: 700; font-size: 34pt;
+                 background: #000068; color: #fff; font-weight: 700; font-size: 34pt;
                  display: flex; align-items: center; justify-content: center; }
   .cover .wordmark { text-align: left; line-height: 1.1; }
-  .cover .wordmark .name { display: block; color: #31585d; font-weight: 700; font-size: 24pt; }
+  .cover .wordmark .name { display: block; color: #000068; font-weight: 700; font-size: 24pt; }
   .cover .wordmark .sub { display: block; color: #52606d; font-weight: 600; font-size: 11pt;
                           letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
-  .cover h1.title { border: none; font-size: 30pt; color: #31585d; margin: 0 0 10px; padding: 0; }
+  .cover h1.title { border: none; font-size: 30pt; color: #000068; margin: 0 0 10px; padding: 0; }
   .cover .rule { width: 90px; height: 4px; background: #4ba5aa; margin: 18px auto 22px; border-radius: 2px; }
   .cover .tagline { color: #52606d; font-size: 13pt; font-style: italic; margin: 0 auto; max-width: 130mm; }
   .cover .meta { margin-top: 64px; color: #52606d; font-size: 10.5pt; }

@@ -48,7 +48,7 @@ export function ColorField({
   label,
   value,
   onChange,
-  defaultValue = "#31585d",
+  defaultValue = "#000068",
 }: {
   label: string;
   value?: string;

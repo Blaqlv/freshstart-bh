@@ -581,7 +581,7 @@ function BackgroundControls({
         label="Custom background (solid colour, image, or gradient)"
         checked={!!background}
         onChange={(on) =>
-          onChange(on ? background ?? { type: "color", color: "#31585d", colorOpacity: 100 } : undefined)
+          onChange(on ? background ?? { type: "color", color: "#000068", colorOpacity: 100 } : undefined)
         }
       />
       {background && <BackgroundEditor value={background} onChange={onChange} />}
